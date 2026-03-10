@@ -97,5 +97,77 @@
     "approval_status": "approved",
     "result": "success",
     "details": "**Execution complete.** Here's the summary:\n\n| Step | Result |\n|------|--------|\n| Send \"Re: Favourite color\" to Faizan Ali | Sent (ID: `19cd6aab5eb2cdb6`) |\n| Send \"Re: Daily routine\" to Faizan Ali | Sent (ID: `19cd6aacb44278e9`) |\n| Move plan to `Vault/Done/` | Done |\n| Update execution report | Done |\n| Update Dashboard | Done |\n\n**Status: COMPLETE** \u00e2\u20ac\u201d `Vault/Approved/` is now empty."
+  },
+  {
+    "timestamp": "2026-03-10T15:46:25.587766",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260310_154241_Plan_For_Eid_vacations.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260310_154241_Plan_For_Eid_vacations.md"
+  },
+  {
+    "timestamp": "2026-03-10T15:46:26.095058",
+    "action_type": "plan_submitted_for_approval",
+    "actor": "main",
+    "target": "PLAN_email_20260310_154241_Plan_For_Eid_vacations.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-10T16:05:00.000000",
+    "action_type": "plan_executed",
+    "actor": "vault-execute",
+    "target": "PLAN_email_20260310_154241_Plan_For_Eid_vacations.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "Drafted Eid vacation reply to zeeshanali02004@gmail.com (Gmail Draft ID: r-5909633367972729164). Files moved to Done/. Awaiting human to send draft from Gmail."
+  },
+  {
+    "timestamp": "2026-03-10T15:51:09.292451",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260310_154241_Plan_For_Eid_vacations.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "**Execution complete.** Here's the summary:\n\n| Step | Result |\n|------|--------|\n| Read original email (Zeeshan Ali \u00e2\u20ac\u201d Eid vacations) | Done |\n| Generate Eid vacation plan | Done |\n| Save Gmail draft reply to zeeshanali02004@gmail.com | Done (Draft ID: `r-5909633367972729164`) |\n| Move plan \u00e2\u2020\u2019 `Vault/Done/` | Done |\n| Move original task \u00e2\u2020\u2019 `Vault/Done/` | Done |\n| Write execution report | Done |\n| Update audit log | Done |\n| Update Dashboard | Done |\n\n**Status: COMPLETE** \u00e2\u20ac\u201d `Vault/Approved/"
+  },
+  {
+    "timestamp": "2026-03-10T16:18:48.823665",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260310_161710_Sports_Gala_Invitation.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260310_161710_Sports_Gala_Invitation.md"
+  },
+  {
+    "timestamp": "2026-03-10T16:25:48.852812",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_email_20260310_161710_Sports_Gala_Invitation.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-10T16:35:00.000000",
+    "action_type": "plan_executed",
+    "actor": "vault-execute",
+    "target": "PLAN_email_20260310_161710_Sports_Gala_Invitation.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "Reply sent to zeeshanali02004@gmail.com (Gmail Message ID: 19cd77fac316bca7). Expressed interest and requested event details. Files moved to Done/."
+  },
+  {
+    "timestamp": "2026-03-10T16:27:27.017140",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260310_161710_Sports_Gala_Invitation.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "All done. Here's the execution summary:\n\n| Step | Result |\n|------|--------|\n| Send reply to zeeshanali02004@gmail.com | Sent (ID: `19cd77fac316bca7`) |\n| Move plan \u00e2\u2020\u2019 `Vault/Done/` | Done |\n| Move original task \u00e2\u2020\u2019 `Vault/Done/` | Done |\n| Write execution report | Done |\n| Update audit log | Done |\n| Update Dashboard | Done |\n\n**Status: COMPLETE** \u00e2\u20ac\u201d The Sports Gala reply was sent expressing interest and asking Zeeshan for the event date, time, and venue. `Vault/Approved/` and `Vault/Needs_Ac"
   }
 ]

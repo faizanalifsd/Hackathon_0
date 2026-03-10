@@ -8,9 +8,9 @@ Pipeline:
     gmail_watcher (every 2 min)
         → Inbox/          (watchdog → instant triage)
         → Needs_Action/   (watchdog → instant plan generation)
-        → Pending_Approval/ (YOU move to Approved/)
-        → Approved/       (watchdog → instant execution + email send)
-        → Done/
+        → Plans/          (YOU open, edit, tick checkbox, save)
+            ✅ Approve     → Approved/ → execution + email send → Done/
+            ⏸ Pending     → Pending_Approval/ (hold for later)
 
 Usage:
     uv run python main.py
@@ -195,7 +195,7 @@ def _plan_file(path: Path, vault: VaultIO):
         details=f"Plan written to {plan_path.name}",
     )
 
-    log.info("[Plan] Plan sitting in Plans/ → PlansHandler will route to Pending_Approval/")
+    log.info("[Plan] Plan written to Plans/ → open in Obsidian, tick a checkbox, save to route it")
     vault.update_dashboard(
         recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Plan generated: `{plan_path.name}`"
     )
@@ -227,60 +227,88 @@ class NeedsActionHandler(FileSystemEventHandler):
 
 
 # ---------------------------------------------------------------------------
-# Step 4: Plans watchdog → Pending_Approval (if approval needed)
+# Step 4: Plans watchdog → watches for user checkbox tick → Approved/ or Pending_Approval/
 # ---------------------------------------------------------------------------
 
-def _route_plan(path: Path, vault: VaultIO):
-    """Move a new plan from Plans/ to Pending_Approval/ if approval is needed."""
-    from reasoning_loop import _parse_plan_frontmatter_approval
+def _check_plan_decision(path: Path, vault: VaultIO):
+    """
+    Called when a Plans/ file is modified.
+    Reads the file and routes based on which checkbox the user ticked:
+      - [x] ✅ Approve  → Approved/  (triggers execution)
+      - [x] ⏸ Pending Approval → Pending_Approval/
+    """
     try:
-        plan_content = path.read_text(encoding="utf-8")
+        content = path.read_text(encoding="utf-8")
     except Exception as exc:
-        log.error("[Route] Cannot read %s: %s", path.name, exc)
+        log.error("[Plans] Cannot read %s: %s", path.name, exc)
         return
 
-    needs_approval = _parse_plan_frontmatter_approval(plan_content)
-    if needs_approval:
+    approved = (
+        "- [x] ✅ Approve" in content
+        or "- [X] ✅ Approve" in content
+        or "- [x] Approve" in content
+        or "- [X] Approve" in content
+    )
+    pending = (
+        "- [x] ⏸ Pending Approval" in content
+        or "- [X] ⏸ Pending Approval" in content
+        or "- [x] Pending Approval" in content
+        or "- [X] Pending Approval" in content
+    )
+
+    if approved:
         try:
-            pa_path = vault.move_to_pending_approval(f"Plans/{path.name}")
-            log.info("[Route] Plans/%s → Pending_Approval/ ← review and move to Approved/ to execute", path.name)
+            vault.move_to_approved(f"Plans/{path.name}")
+            log.info("[Plans] %s → Approved/ ← executing now", path.name)
             vault.log_action(
-                action_type="plan_submitted_for_approval", actor="main",
+                action_type="plan_approved_by_user", actor="user",
+                target=path.name, approval_status="approved", result="success",
+            )
+            vault.update_dashboard(
+                recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Approved by user: `{path.name}`"
+            )
+        except Exception as exc:
+            log.error("[Plans] Failed to move %s to Approved: %s", path.name, exc)
+
+    elif pending:
+        try:
+            vault.move_to_pending_approval(f"Plans/{path.name}")
+            log.info("[Plans] %s → Pending_Approval/ ← held for later", path.name)
+            vault.log_action(
+                action_type="plan_deferred_by_user", actor="user",
                 target=path.name, approval_status="pending", result="success",
             )
             vault.update_dashboard(
-                recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Awaiting approval: `{path.name}`"
+                recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Deferred: `{path.name}`"
             )
         except Exception as exc:
-            log.error("[Route] Failed to move %s to Pending_Approval: %s", path.name, exc)
-    else:
-        log.info("[Route] No approval needed for %s — plan stays in Plans/", path.name)
+            log.error("[Plans] Failed to move %s to Pending_Approval: %s", path.name, exc)
 
 
 class PlansHandler(FileSystemEventHandler):
+    """Watch Plans/ for user checkbox modifications and route accordingly."""
+
     def __init__(self, vault: VaultIO):
         self.vault = vault
-        self._seen: set = set()
+        self._debounce: dict = {}  # path → last-processed timestamp
         self._lock = threading.Lock()
 
-    def _handle(self, path: Path):
-        if path.suffix.lower() == ".md" and path.name.startswith("PLAN_"):
-            with self._lock:
-                if path.name in self._seen:
-                    return
-                self._seen.add(path.name)
-            time.sleep(0.5)  # ensure file is fully written
-            threading.Thread(
-                target=_route_plan, args=(path, self.vault), daemon=True
-            ).start()
+    def _handle_modified(self, path: Path):
+        if not (path.suffix.lower() == ".md" and path.name.startswith("PLAN_")):
+            return
+        now = time.time()
+        with self._lock:
+            last = self._debounce.get(str(path), 0)
+            if now - last < 2.0:  # 2-second debounce — watchdog fires multiple events per save
+                return
+            self._debounce[str(path)] = now
+        threading.Thread(
+            target=_check_plan_decision, args=(path, self.vault), daemon=True
+        ).start()
 
-    def on_created(self, event):
+    def on_modified(self, event):
         if not event.is_directory:
-            self._handle(Path(event.src_path))
-
-    def on_moved(self, event):
-        if not event.is_directory:
-            self._handle(Path(event.dest_path))
+            self._handle_modified(Path(event.src_path))
 
 
 # ---------------------------------------------------------------------------
@@ -337,9 +365,9 @@ def main():
     observer.schedule(NeedsActionHandler(vault), str(vault.root / "Needs_Action"), recursive=False)
     log.info("[NeedsAction] Watching Vault/Needs_Action/ → auto-plan on new item")
 
-    # Watch Plans/ → route to Pending_Approval
+    # Watch Plans/ → detect user checkbox tick → route to Approved/ or Pending_Approval/
     observer.schedule(PlansHandler(vault), str(vault.root / "Plans"), recursive=False)
-    log.info("[Plans]      Watching Vault/Plans/ → auto-route to Pending_Approval/")
+    log.info("[Plans]      Watching Vault/Plans/ → routes on checkbox tick (✅ Approve / ⏸ Pending)")
 
     # Watch Approved/ → execute
     observer.schedule(ApprovedHandler(vault), str(vault.root / "Approved"), recursive=False)
@@ -356,7 +384,11 @@ def main():
 
     log.info("")
     log.info("Pipeline ready. Your only job:")
-    log.info("  Review Vault/Pending_Approval/ → move plan to Vault/Approved/ to send email.")
+    log.info("  1. Open a PLAN_*.md in Vault/Plans/ (Obsidian)")
+    log.info("  2. Edit if needed, then tick one checkbox:")
+    log.info("       - [x] ✅ Approve  → executes immediately (sends email)")
+    log.info("       - [x] ⏸ Pending Approval  → holds in Pending_Approval/ for later")
+    log.info("  3. Save the file — pipeline routes it automatically.")
     log.info("")
     log.info("Press Ctrl+C to stop.")
 

@@ -159,6 +159,14 @@ If none, write: _No approval-required actions._
 ## Notes
 <any additional context or warnings>
 
+---
+## Your Decision
+
+Review the plan above, make any changes you need, then check **one** box and save the file:
+
+- [ ] ✅ Approve — execute this plan now (Claude will send the reply email)
+- [ ] ⏸ Pending Approval — hold for later review
+
 Set approval_needed to 'yes' if any step involves sending emails, social posts, payments, or external actions.
 Set it to 'no' if this is purely internal analysis or file organization.
 """
@@ -175,7 +183,22 @@ Set it to 'no' if this is purely internal analysis or file organization.
             env=env,
         )
         if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
+            output = result.stdout.strip()
+            # Strip markdown code fences if Claude wrapped the plan in ```markdown ... ```
+            if output.startswith("```"):
+                lines = output.splitlines()
+                # Remove first line (```markdown or ```) and last line (```)
+                inner = "\n".join(lines[1:])
+                end_fence = inner.rfind("```")
+                if end_fence != -1:
+                    output = inner[:end_fence].strip()
+            # If Claude returned prose + a fenced block, extract just the fenced block
+            if "```markdown" in output:
+                start = output.index("```markdown") + len("```markdown")
+                end = output.rfind("```")
+                if end > start:
+                    output = output[start:end].strip()
+            return output
         log.warning("Claude returned non-zero exit for %s: %s", task_name, result.stderr)
         return None
     except FileNotFoundError:
@@ -213,6 +236,14 @@ Claude CLI was unavailable at the time of processing.
 
 ## Notes
 Re-run reasoning_loop.py when Claude CLI is available for a proper plan.
+
+---
+## Your Decision
+
+Review the plan above, make any changes you need, then check **one** box and save the file:
+
+- [ ] ✅ Approve — execute this plan now (Claude will send the reply email)
+- [ ] ⏸ Pending Approval — hold for later review
 """
 
 
@@ -261,30 +292,12 @@ def process_needs_action(vault: VaultIO) -> int:
             action_type="plan_generated",
             actor="reasoning_loop",
             target=task_name,
-            approval_status="auto",
+            approval_status="pending_user",
             result="success",
-            details=f"Plan written to {plan_path.name}",
+            details=f"Plan written to {plan_path.name} — awaiting user decision",
         )
 
-        # Move to Pending_Approval if needed
-        needs_approval = _parse_plan_frontmatter_approval(plan_content)
-        if needs_approval:
-            try:
-                plan_rel = f"Plans/{plan_path.name}"
-                pa_path = vault.move_to_pending_approval(plan_rel)
-                log.info("Moved plan -> Pending_Approval/%s (awaiting your approval)", pa_path.name)
-                vault.log_action(
-                    action_type="plan_submitted_for_approval",
-                    actor="reasoning_loop",
-                    target=plan_path.name,
-                    approval_status="pending",
-                    result="success",
-                )
-            except Exception as exc:
-                log.error("Failed to move plan to Pending_Approval: %s", exc)
-        else:
-            log.info("Plan for %s requires no approval — ready to execute.", task_name)
-
+        log.info("Plan sitting in Plans/ — open it in Obsidian, tick a checkbox, and save.")
         processed += 1
 
     # Update dashboard after all processing

@@ -182,13 +182,16 @@ result: {result_str}
     except Exception as exc:
         log.error("Failed to write report: %s", exc)
 
-    # Move approved plan -> Done
-    try:
-        rel_plan = f"Approved/{plan_name}"
-        vault.move_to_done(rel_plan, summary=f"Executed on {datetime.now():%Y-%m-%d %H:%M}")
-        log.info("Moved plan -> Done/%s", plan_name)
-    except Exception as exc:
-        log.error("Failed to move plan to Done: %s", exc)
+    # Move approved plan -> Done (Claude may have already moved it during execution)
+    rel_plan = f"Approved/{plan_name}"
+    if (vault.root / rel_plan).exists():
+        try:
+            vault.move_to_done(rel_plan, summary=f"Executed on {datetime.now():%Y-%m-%d %H:%M}")
+            log.info("Moved plan -> Done/%s", plan_name)
+        except Exception as exc:
+            log.error("Failed to move plan to Done: %s", exc)
+    else:
+        log.info("Plan already moved to Done by Claude during execution — skipping.")
 
     # Move original task -> Done (if found)
     task_rel = _find_task_file(vault, plan_name)
