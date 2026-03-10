@@ -1,0 +1,20 @@
+[project]
+name = "hackathon-0"
+version = "0.2.0"
+description = "Personal AI Employee — Hackathon 0 (Silver Tier)"
+requires-python = ">=3.12"
+dependencies = [
+    # Bronze
+    "watchdog>=4.0.0",
+    # Silver — Gmail Watcher
+    "google-auth-oauthlib>=1.2.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-api-python-client>=2.120.0",
+    # Silver — LinkedIn & HTTP
+    "requests>=2.31.0",
+    # Silver — env loading
+    "python-dotenv>=1.0.0",
+    # Silver — WhatsApp (install separately: uv run playwright install chromium)
+    "playwright>=1.43.0",
+    "mcp[cli]>=1.26.0",
+]

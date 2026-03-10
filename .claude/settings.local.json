@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv add:*)",
+      "Bash(uv sync:*)",
+      "Bash(python:*)",
+      "Bash(where claude:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(cd E:/Hackathon_0 && uv run python main.py)",
+      "Bash(rm -f E:/Hackathon_0/Vault/Needs_Action/*.md && rm -f E:/Hackathon_0/Vault/Plans/*.md && rm -f E:/Hackathon_0/Vault/Pending_Approval/*.md && echo \"Done\")"
+    ]
+  }
+}

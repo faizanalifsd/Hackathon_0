@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Secrets — NEVER commit these
+.env
+.mcp.json
+credentials.json
+token.json
+linkedin_token.json
+whatsapp_session/
+
+# Logs
+*.log
+
+# UV lock (optional — remove this line if you want reproducible installs)
+# uv.lock
+
+# OS
+.DS_Store
+Thumbs.db
