@@ -42,7 +42,7 @@ SESSION_DIR = BASE_DIR / "whatsapp_session"
 LOG_FILE = BASE_DIR / "whatsapp_watcher.log"
 
 # Keywords to filter — empty list = capture all new messages
-WATCH_KEYWORDS_DEFAULT = ["urgent", "asap", "invoice", "payment", "meeting"]
+WATCH_KEYWORDS_DEFAULT = []  # empty = capture ALL messages
 POLL_INTERVAL_SECONDS = 60  # check every minute in daemon mode
 SCAN_DURATION_SECONDS = 30  # how long to scan for new messages each poll
 
@@ -77,8 +77,13 @@ def message_matches(text: str, keywords: list[str]) -> bool:
 
 def message_to_markdown(sender: str, chat_name: str, text: str) -> tuple[str, str]:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    safe_sender = re.sub(r"[^\w\s-]", "", sender).strip().replace(" ", "_")[:40]
-    filename = f"whatsapp_{timestamp}_{safe_sender}.md"
+    # Use chat_name for filename (more reliable than sender in group chats)
+    name_for_file = chat_name if chat_name and chat_name != "Unknown" else sender
+    safe_name = re.sub(r"[^\w\s-]", "", name_for_file).strip().replace(" ", "_")[:40]
+    # Add short content hash to prevent duplicate filenames
+    import hashlib
+    content_hash = hashlib.md5(text[:80].encode()).hexdigest()[:6]
+    filename = f"whatsapp_{timestamp}_{safe_name}_{content_hash}.md"
 
     content = f"""---
 source: whatsapp
@@ -120,6 +125,17 @@ def run_watcher(daemon: bool = False):
 
     INBOX_DIR.mkdir(parents=True, exist_ok=True)
     SESSION_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Clear Chrome lock files left by previous crashed/killed sessions
+    for lock_file in ["lockfile", "SingletonLock", "SingletonSocket", "SingletonCookie"]:
+        lock_path = SESSION_DIR / lock_file
+        if lock_path.exists():
+            try:
+                lock_path.unlink()
+                log.info("Cleared lock file: %s", lock_file)
+            except Exception:
+                pass
+
     keywords = get_keywords()
     log.info("Watching for keywords: %s", keywords if keywords else "(all messages)")
 
@@ -133,12 +149,15 @@ def run_watcher(daemon: bool = False):
         )
         page = browser.new_page()
         log.info("Opening WhatsApp Web...")
-        page.goto("https://web.whatsapp.com")
+        page.goto("https://web.whatsapp.com", timeout=60000, wait_until="domcontentloaded")
 
         # Wait for WhatsApp to load (QR scan or session restore)
         log.info("Waiting for WhatsApp to load (scan QR if prompted)...")
         try:
-            page.wait_for_selector('[data-testid="chat-list"]', timeout=120_000)
+            page.wait_for_selector(
+                '[data-testid="chat-list"], #side, ._aigv, [aria-label="Chat list"]',
+                timeout=300_000
+            )
             log.info("WhatsApp Web loaded.")
         except PWTimeout:
             log.error("Timed out waiting for WhatsApp to load.")
@@ -149,61 +168,125 @@ def run_watcher(daemon: bool = False):
             """Scan visible unread chats and save matching messages. Returns count saved."""
             count = 0
             try:
-                # Find chats with unread badge
-                unread_chats = page.query_selector_all('[data-testid="icon-unread-count"]')
-                log.info("Found %d unread chat(s).", len(unread_chats))
+                # Try multiple known selectors for unread badges (WhatsApp changes these often)
+                unread_chats = []
+                for selector in [
+                    '[data-testid="icon-unread-count"]',
+                    'span[data-testid="icon-unread-count"]',
+                    '[aria-label*="unread"]',
+                    'span.x1c4vz4f',  # fallback class
+                ]:
+                    unread_chats = page.query_selector_all(selector)
+                    if unread_chats:
+                        log.info("Found %d unread chat(s) via selector: %s", len(unread_chats), selector)
+                        break
+
+                if not unread_chats:
+                    log.info("Found 0 unread chat(s).")
+                    return 0
 
                 for badge in unread_chats:
                     try:
-                        # Click the parent chat row
-                        chat_row = badge.evaluate_handle(
-                            "el => el.closest('[data-testid=\"cell-frame-container\"]')"
-                        )
-                        chat_row.as_element().click()
-                        time.sleep(1.5)
-
-                        # Get chat name
-                        try:
-                            chat_name_el = page.query_selector('[data-testid="conversation-info-header-chat-title"]')
-                            chat_name = chat_name_el.inner_text() if chat_name_el else "Unknown"
-                        except Exception:
-                            chat_name = "Unknown"
-
-                        # Get last few messages
-                        msgs = page.query_selector_all(
-                            '.message-in [data-testid="msg-container"]'
-                        )
-                        for msg_el in msgs[-5:]:  # last 5 incoming messages
+                        # Click the parent chat row — walk up the DOM to find a clickable row
+                        clicked = False
+                        for container in [
+                            '[data-testid="cell-frame-container"]',
+                            '[role="listitem"]',
+                            'div[tabindex="-1"]',
+                            'li',
+                        ]:
                             try:
-                                text_el = msg_el.query_selector(
-                                    '[data-testid="msg-meta"], .copyable-text'
+                                chat_row = badge.evaluate_handle(
+                                    f"el => el.closest('{container}')"
                                 )
-                                if not text_el:
-                                    continue
-                                text = text_el.inner_text().strip()
+                                el = chat_row.as_element()
+                                if el:
+                                    el.click()
+                                    clicked = True
+                                    break
+                            except Exception:
+                                continue
+
+                        if not clicked:
+                            # Last resort: click the badge itself
+                            try:
+                                badge.click()
+                            except Exception:
+                                continue
+                        time.sleep(2)
+
+                        # Get chat name — try multiple selectors
+                        chat_name = "Unknown"
+                        for sel in [
+                            '[data-testid="conversation-info-header-chat-title"]',
+                            'header [data-testid="conversation-title"]',
+                            'header span[title]',
+                            '#main header span[dir="auto"]',
+                        ]:
+                            el = page.query_selector(sel)
+                            if el:
+                                chat_name = el.inner_text().strip() or el.get_attribute("title") or "Unknown"
+                                break
+
+                        # Get last few messages — try multiple selectors
+                        msgs = []
+                        for sel in [
+                            '.message-in [data-testid="msg-container"]',
+                            '[data-testid="msg-container"]',
+                            'div.message-in',
+                            'div[class*="message-in"]',
+                        ]:
+                            msgs = page.query_selector_all(sel)
+                            if msgs:
+                                log.debug("Found %d messages via selector: %s", len(msgs), sel)
+                                break
+
+                        # Fallback: grab all copyable-text spans in the conversation
+                        if not msgs:
+                            msgs = page.query_selector_all('.copyable-text')
+
+                        for msg_el in msgs[-10:]:  # last 10 messages
+                            try:
+                                # Extract text — try specific selectors then full inner text
+                                text = ""
+                                for text_sel in [
+                                    '.copyable-text',
+                                    'span[dir="ltr"]',
+                                    'span[dir="rtl"]',
+                                    '[data-testid="msg-meta"]',
+                                ]:
+                                    text_el = msg_el.query_selector(text_sel)
+                                    if text_el:
+                                        text = text_el.inner_text().strip()
+                                        if text:
+                                            break
+                                if not text:
+                                    text = msg_el.inner_text().strip()
+                                # Clean up timestamp noise (e.g. "10:30 AM\n\nHello")
+                                lines = [l for l in text.splitlines() if l.strip() and not l.strip().startswith("✓")]
+                                text = "\n".join(lines).strip()
                                 if not text:
                                     continue
 
-                                # De-duplicate using text+chat fingerprint
-                                msg_id = f"{chat_name}::{text[:80]}"
+                                # De-duplicate using chat + content fingerprint
+                                import hashlib
+                                msg_id = hashlib.md5(f"{chat_name}::{text[:120]}".encode()).hexdigest()[:12]
                                 if msg_id in seen_message_ids:
                                     continue
+                                seen_message_ids.add(msg_id)
 
                                 if message_matches(text, keywords):
-                                    # Try to extract individual sender (group chats)
                                     try:
                                         pre_plain = msg_el.get_attribute("data-pre-plain-text") or ""
-                                        # Format: "[HH:MM, DD/MM/YYYY] Sender Name: "
                                         sender = pre_plain.split("] ")[-1].rstrip(": ") if "] " in pre_plain else chat_name
                                     except Exception:
                                         sender = chat_name
-                                    filename, content = message_to_markdown(
-                                        sender, chat_name, text
-                                    )
+                                    filename, content = message_to_markdown(sender, chat_name, text)
                                     (INBOX_DIR / filename).write_text(content, encoding="utf-8")
-                                    seen_message_ids.add(msg_id)
                                     log.info("Saved WhatsApp message -> %s", filename)
                                     count += 1
+                                else:
+                                    log.debug("Skipped (no keyword match): %s", text[:60])
                             except Exception as e:
                                 log.debug("Error reading message: %s", e)
                     except Exception as e:
