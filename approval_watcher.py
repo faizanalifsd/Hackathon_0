@@ -28,7 +28,6 @@ Workflow:
 import argparse
 import logging
 import os
-import subprocess
 import sys
 import time
 from datetime import datetime
@@ -66,71 +65,88 @@ log = logging.getLogger("approval-watcher")
 # Execution
 # ---------------------------------------------------------------------------
 
-def _find_claude_cmd() -> list[str]:
-    """Return the correct claude CLI command for the current platform."""
-    import shutil
-    if sys.platform == "win32":
-        for candidate in ["claude.cmd", "claude"]:
-            path = shutil.which(candidate)
-            if path:
-                return [path]
-        npm_claude = Path.home() / "AppData/Roaming/npm/claude.cmd"
-        if npm_claude.exists():
-            return [str(npm_claude)]
-    else:
-        path = shutil.which("claude")
-        if path:
-            return [path]
-    return []
 
-
-def _execute_plan_via_claude(plan_name: str, plan_content: str) -> tuple[bool, str]:
+def _extract_email_fields(plan_content: str) -> dict | None:
     """
-    Ask Claude to execute the steps in an approved plan.
-    Returns (success: bool, output: str).
+    Use Groq to extract email fields (to, subject, body) from an approved plan.
+    Returns dict or None if no email needs to be sent.
     """
-    prompt = f"""You are an AI Employee. The human has APPROVED the following plan.
-Execute ALL steps in the plan, including sending emails.
+    from router import route_completion
+    system = """You are an email extraction assistant.
+Read the plan and extract the reply email to send.
+Respond in this EXACT format (no extra text):
 
-You have access to the gmail_send MCP tool. Use it to send any email replies described in the plan.
-Extract the recipient (to), subject, and body from the plan steps and call gmail_send directly.
+TO: recipient@email.com
+SUBJECT: Subject line here
+BODY:
+Full email body here
+(can be multiple lines)
+END
 
-APPROVED PLAN ({plan_name}):
-{plan_content}
+If no email needs to be sent, respond with exactly: NO_EMAIL"""
 
-After executing, respond with:
-## Execution Report
-### Completed Steps
-- list what you did (including emails sent with recipient + subject)
+    result = route_completion(system, plan_content, force_model="groq")
+    if not result or "NO_EMAIL" in result:
+        return None
 
-### Remaining Human Actions
-- list anything that truly cannot be automated (e.g. physical actions, payments)
-
-### Status
-COMPLETE | PARTIAL | BLOCKED
-"""
-    claude_cmd = _find_claude_cmd()
-    if not claude_cmd:
-        return False, "'claude' CLI not found"
     try:
-        # Unset CLAUDECODE so claude CLI can run outside an active session
-        env = os.environ.copy()
-        env.pop("CLAUDECODE", None)
-        result = subprocess.run(
-            claude_cmd + ["--print", "--dangerously-skip-permissions", prompt],
-            capture_output=True,
-            text=True,
-            timeout=180,
-            cwd=str(BASE_DIR),
-            env=env,
+        to = subject = ""
+        body_lines = []
+        in_body = False
+        for line in result.strip().splitlines():
+            if line.startswith("TO:"):
+                to = line.split(":", 1)[1].strip()
+            elif line.startswith("SUBJECT:"):
+                subject = line.split(":", 1)[1].strip()
+            elif line.startswith("BODY:"):
+                in_body = True
+            elif line.strip() == "END":
+                in_body = False
+            elif in_body:
+                body_lines.append(line)
+        body = "\n".join(body_lines).strip()
+        if to and subject and body:
+            return {"to": to, "subject": subject, "body": body}
+    except Exception as exc:
+        log.error("Email extraction failed: %s", exc)
+    return None
+
+
+def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
+    """
+    Execute an approved plan:
+      1. Groq extracts email fields from the plan
+      2. Gmail API sends the email directly (no MCP subprocess needed)
+    Returns (success, report_markdown).
+    """
+    from gmail_mcp_server import send_email
+
+    log.info("[Execute] Extracting email via Groq...")
+    fields = _extract_email_fields(plan_content)
+
+    if not fields:
+        return True, (
+            "## Execution Report\n\n"
+            "No outgoing email found in plan.\n\n"
+            "**Status: COMPLETE**"
         )
-        if result.returncode == 0:
-            return True, result.stdout.strip()
-        return False, result.stderr.strip()
-    except FileNotFoundError:
-        return False, "'claude' CLI not found"
-    except subprocess.TimeoutExpired:
-        return False, "Claude execution timed out"
+
+    log.info("[Execute] Sending to %s — %s", fields["to"], fields["subject"])
+    try:
+        result = send_email(fields["to"], fields["subject"], fields["body"])
+        msg_id = result.get("message_id", "unknown")
+        log.info("[Execute] ✅ Email sent — Gmail ID: %s", msg_id)
+        return True, (
+            f"## Execution Report\n\n"
+            f"| Step | Result |\n|------|--------|\n"
+            f"| Send reply to {fields['to']} | Sent (ID: `{msg_id}`) |\n"
+            f"| Subject | {fields['subject']} |\n"
+            f"| Move plan → `Vault/Done/` | Done |\n\n"
+            f"**Status: COMPLETE**"
+        )
+    except Exception as exc:
+        log.error("[Execute] Send failed: %s", exc)
+        return False, f"## Execution Report\n\nFailed to send email: {exc}\n\n**Status: BLOCKED**"
 
 
 def _find_task_file(vault: VaultIO, plan_name: str) -> str | None:
@@ -159,8 +175,8 @@ def process_approved_plan(vault: VaultIO, plan_path: Path) -> None:
         log.error("Cannot read %s: %s", plan_name, exc)
         return
 
-    # Execute via Claude
-    success, output = _execute_plan_via_claude(plan_name, plan_content)
+    # Execute: Groq extracts email fields → Gmail API sends directly
+    success, output = _execute_plan(plan_name, plan_content)
     result_str = "success" if success else "failed"
     log.info("Execution %s for %s", result_str, plan_name)
 
