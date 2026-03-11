@@ -1,0 +1,65 @@
+[
+  {
+    "timestamp": "2026-03-11T11:18:08.195806",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260311_111722_Education_expenses.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260311_111722_Education_expenses.md"
+  },
+  {
+    "timestamp": "2026-03-11T11:18:56.010768",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_email_20260311_111722_Education_expenses.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-11T11:30:00.000000",
+    "action_type": "plan_executed",
+    "actor": "vault-execute",
+    "target": "PLAN_email_20260311_111722_Education_expenses.md",
+    "approval_status": "approved",
+    "result": "partial",
+    "details": "Drafts created: DRAFT_education_expenses_breakdown.md, DRAFT_email_faizan_reply.md. Awaiting human to fill in actual figures and send reply."
+  },
+  {
+    "timestamp": "2026-03-11T11:20:47.491957",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260311_111722_Education_expenses.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "Done. Here's the execution summary:\n\n**Plan executed: Education Expenses Breakdown** \u00e2\u20ac\u201d PARTIAL\n\n**Completed automatically:**\n- Created structured expense breakdown template: `Vault/Done/DRAFT_education_expenses_breakdown.md`\n- Created draft email reply for Faizan Ali: `Vault/Done/DRAFT_email_faizan_reply.md`\n- Moved plan + original task to `Vault/Done/`\n- Appended audit log entry\n- Updated Dashboard (Needs Action: 0, Done: 11)\n\n**Awaiting you:**\n1. Open `Vault/Done/DRAFT_email_faizan_reply.md`"
+  },
+  {
+    "timestamp": "2026-03-11T11:34:06.157625",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260311_113326_Expenses.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260311_113326_Expenses.md"
+  },
+  {
+    "timestamp": "2026-03-11T11:34:39.638312",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_email_20260311_113326_Expenses.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-11T11:35:37.535962",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260311_113326_Expenses.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "The email draft to Faizan Ali still has placeholder `[X]` values for the actual expense figures. Before I can send, I need your input:\n\n**How would you like to proceed?**\n\n1. **Provide figures now** \u00e2\u20ac\u201d give me the actual yearly amounts for University Fee, Food, Fuel, Clothes, and Hostel Rent, and I'll fill in the draft and send via Gmail.\n2. **Send as template** \u00e2\u20ac\u201d send the structured table as-is, telling Faizan you'll follow up with the numbers.\n3. **Skip sending** \u00e2\u20ac\u201d I'll complete all file "
+  }
+]
