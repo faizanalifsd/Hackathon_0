@@ -43,8 +43,8 @@ LOG_FILE = BASE_DIR / "whatsapp_watcher.log"
 
 # Keywords to filter — empty list = capture all new messages
 WATCH_KEYWORDS_DEFAULT = []  # empty = capture ALL messages
-POLL_INTERVAL_SECONDS = 60  # check every minute in daemon mode
-SCAN_DURATION_SECONDS = 30  # how long to scan for new messages each poll
+POLL_INTERVAL_SECONDS = 30  # check every 30 seconds in daemon mode
+SCAN_DURATION_SECONDS = 15  # how long to scan for new messages each poll
 
 logging.basicConfig(
     level=logging.INFO,
@@ -213,7 +213,7 @@ def run_watcher(daemon: bool = False):
                                 badge.click()
                             except Exception:
                                 continue
-                        time.sleep(2)
+                        time.sleep(1)
 
                         # Get chat name — try multiple selectors
                         chat_name = "Unknown"
