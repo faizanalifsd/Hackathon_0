@@ -122,13 +122,23 @@ def _triage_file(path: Path, vault: VaultIO):
         except Exception as exc:
             log.warning("[Triage] Claude error: %s", exc)
 
-    # Fallback: move directly to Needs_Action
-    log.info("[Triage] Fallback: moving %s → Needs_Action/", path.name)
+    # Fallback: classify via router then move to Needs_Action
+    log.info("[Triage] Fallback: classifying %s via router → Needs_Action/", path.name)
     try:
+        classification = {"priority": "medium", "summary": "Auto-triaged — review needed"}
+        try:
+            from router import classify_email
+            raw = path.read_text(encoding="utf-8")
+            classification = classify_email(raw)
+            log.info("[Triage] Router classified: priority=%s summary=%s",
+                     classification.get("priority"), classification.get("summary", "")[:60])
+        except Exception as exc:
+            log.warning("[Triage] Router classification failed: %s", exc)
+
         vault.move_to_needs_action(
             str(rel),
-            summary="Auto-triaged by fallback — review needed",
-            priority="medium",
+            summary=classification.get("summary", "Auto-triaged — review needed"),
+            priority=classification.get("priority", "medium"),
         )
         vault.update_dashboard(
             recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Fallback triage: `{path.name}` → Needs_Action"
@@ -163,7 +173,7 @@ class InboxHandler(FileSystemEventHandler):
 
 def _plan_file(path: Path, vault: VaultIO):
     """Generate a plan for a newly triaged Needs_Action item."""
-    from reasoning_loop import _plan_exists, _generate_plan_via_claude, _generate_plan_fallback, _parse_plan_frontmatter_approval
+    from reasoning_loop import _plan_exists, _generate_plan_via_router, _generate_plan_fallback, _parse_plan_frontmatter_approval
 
     task_name = path.name
     if _plan_exists(vault, task_name):
@@ -177,7 +187,7 @@ def _plan_file(path: Path, vault: VaultIO):
         log.error("[Plan] Cannot read %s: %s", task_name, exc)
         return
 
-    plan_content = _generate_plan_via_claude(task_name, task_content)
+    plan_content = _generate_plan_via_router(task_name, task_content)
     if not plan_content:
         log.warning("[Plan] Using fallback plan for %s", task_name)
         plan_content = _generate_plan_fallback(task_name, task_content)

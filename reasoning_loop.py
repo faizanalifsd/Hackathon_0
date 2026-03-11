@@ -117,95 +117,19 @@ def _find_claude_cmd() -> list[str]:
     return []
 
 
-def _generate_plan_via_claude(task_name: str, task_content: str) -> str | None:
+def _generate_plan_via_router(task_name: str, task_content: str) -> str | None:
     """
-    Call Claude CLI to generate a plan for the task.
-    Returns the plan markdown string, or None on failure.
+    Generate a plan via the model router:
+      - Short emails → Groq (llama-3.3-70b)
+      - Long emails  → OpenRouter (gemini-flash)
+    Falls back to None so the caller can use _generate_plan_fallback.
     """
-    claude_cmd = _find_claude_cmd()
-    if not claude_cmd:
-        log.error("'claude' CLI not found. Is Claude Code installed?")
-        return None
-
-    prompt = f"""You are an AI Employee assistant. Read the following task from the vault and generate a structured plan.
-
-TASK FILE: {task_name}
-
-TASK CONTENT:
-{task_content}
-
-Generate a plan in this EXACT format (preserve the frontmatter):
-
----
-task: {task_name}
-approval_needed: yes
-priority: medium
----
-
-# Plan: <short title>
-
-## Summary
-<2-3 sentence summary of what needs to be done>
-
-## Steps
-1. <first step>
-2. <second step>
-3. ...
-
-## Actions Requiring Approval
-List any steps that involve: sending emails, posting on social media, payments, or deletions.
-If none, write: _No approval-required actions._
-
-## Notes
-<any additional context or warnings>
-
----
-## Your Decision
-
-Review the plan above, make any changes you need, then check **one** box and save the file:
-
-- [ ] ✅ Approve — execute this plan now (Claude will send the reply email)
-- [ ] ⏸ Pending Approval — hold for later review
-
-Set approval_needed to 'yes' if any step involves sending emails, social posts, payments, or external actions.
-Set it to 'no' if this is purely internal analysis or file organization.
-"""
-
     try:
-        import os
-        env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
-        result = subprocess.run(
-            claude_cmd + ["--print", prompt],
-            capture_output=True,
-            text=True,
-            timeout=120,
-            cwd=str(BASE_DIR),
-            env=env,
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            output = result.stdout.strip()
-            # Strip markdown code fences if Claude wrapped the plan in ```markdown ... ```
-            if output.startswith("```"):
-                lines = output.splitlines()
-                # Remove first line (```markdown or ```) and last line (```)
-                inner = "\n".join(lines[1:])
-                end_fence = inner.rfind("```")
-                if end_fence != -1:
-                    output = inner[:end_fence].strip()
-            # If Claude returned prose + a fenced block, extract just the fenced block
-            if "```markdown" in output:
-                start = output.index("```markdown") + len("```markdown")
-                end = output.rfind("```")
-                if end > start:
-                    output = output[start:end].strip()
-            return output
-        log.warning("Claude returned non-zero exit for %s: %s", task_name, result.stderr)
-        return None
-    except FileNotFoundError:
-        log.error("'claude' CLI not found. Is Claude Code installed?")
-        return None
-    except subprocess.TimeoutExpired:
-        log.error("Claude timed out generating plan for %s", task_name)
+        from router import generate_plan
+        result = generate_plan(task_name, task_content)
+        return result
+    except Exception as exc:
+        log.error("Router plan generation failed: %s", exc)
         return None
 
 
@@ -274,7 +198,7 @@ def process_needs_action(vault: VaultIO) -> int:
             continue
 
         # Generate plan (Claude → fallback)
-        plan_content = _generate_plan_via_claude(task_name, task_content)
+        plan_content = _generate_plan_via_router(task_name, task_content)
         if not plan_content:
             log.warning("Using fallback plan for %s", task_name)
             plan_content = _generate_plan_fallback(task_name, task_content)
