@@ -296,10 +296,39 @@ def run_watcher(daemon: bool = False):
                 log.error("Scan error: %s", e)
             return count
 
+        def is_page_alive() -> bool:
+            try:
+                page.title()
+                return True
+            except Exception:
+                return False
+
+        def reconnect() -> bool:
+            """Try to reopen WhatsApp Web on the existing browser context."""
+            nonlocal page
+            log.warning("[WA] Page died — reconnecting...")
+            try:
+                page = browser.new_page()
+                page.goto("https://web.whatsapp.com", timeout=60000, wait_until="domcontentloaded")
+                page.wait_for_selector(
+                    '[data-testid="chat-list"], #side, [aria-label="Chat list"]',
+                    timeout=60000
+                )
+                log.info("[WA] Reconnected successfully.")
+                return True
+            except Exception as exc:
+                log.error("[WA] Reconnect failed: %s", exc)
+                return False
+
         if daemon:
             log.info("Daemon mode — scanning every %ds. Press Ctrl+C to stop.", POLL_INTERVAL_SECONDS)
             try:
                 while True:
+                    if not is_page_alive():
+                        if not reconnect():
+                            log.error("[WA] Could not reconnect — waiting 30s before retry...")
+                            time.sleep(30)
+                            continue
                     n = scan_once()
                     if n:
                         log.info("Captured %d message(s) -> Vault/Inbox/", n)
