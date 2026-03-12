@@ -66,6 +66,113 @@ log = logging.getLogger("approval-watcher")
 # ---------------------------------------------------------------------------
 
 
+def _detect_source(plan_name: str, plan_content: str) -> str:
+    """Return 'whatsapp' if the plan originated from a WhatsApp message, else 'email'."""
+    # Plan filename contains 'whatsapp' when it came from whatsapp_watcher
+    if "whatsapp" in plan_name.lower():
+        return "whatsapp"
+    # Fallback: check plan content for source field
+    for line in plan_content.splitlines():
+        if "source: whatsapp" in line.lower():
+            return "whatsapp"
+    return "email"
+
+
+
+def _send_whatsapp_reply(chat_name: str, message: str) -> bool:
+    """
+    Send a WhatsApp reply via the already-running watcher's browser (shared session).
+    Enqueues the message and waits for the watcher loop to deliver it.
+    """
+    try:
+        from whatsapp_watcher import send_whatsapp_message
+        log.info("[WhatsApp] Queuing reply to '%s'...", chat_name)
+        success = send_whatsapp_message(chat_name, message, timeout=90)
+        if success:
+            log.info("[WhatsApp] ✅ Reply sent to '%s'", chat_name)
+        else:
+            log.error("[WhatsApp] Reply to '%s' failed or timed out.", chat_name)
+        return success
+    except Exception as exc:
+        log.error("[WhatsApp] Send reply failed: %s", exc)
+        return False
+
+
+def _get_original_task_chat(plan_name: str) -> str | None:
+    """
+    Given PLAN_whatsapp_*.md, find the original task file and return its `chat:` frontmatter value.
+    Looks in Needs_Action/, Inbox/, and Done/.
+    """
+    task_name = plan_name.removeprefix("PLAN_")
+    for folder in ["Needs_Action", "Inbox", "Done"]:
+        task_path = VAULT_ROOT / folder / task_name
+        if task_path.exists():
+            for line in task_path.read_text(encoding="utf-8").splitlines():
+                if line.strip().startswith("chat:"):
+                    return line.split(":", 1)[1].strip()
+    return None
+
+
+def _generate_whatsapp_reply(plan_content: str) -> str:
+    """Use Groq to generate a short WhatsApp reply message from the plan."""
+    try:
+        from router import route_completion
+        system = (
+            "You are a WhatsApp reply assistant. "
+            "Read the plan and write a short, friendly reply message to send to the sender via WhatsApp. "
+            "Output ONLY the message text — no labels, no formatting, no extra commentary."
+        )
+        result = route_completion(system, plan_content, force_model="groq")
+        return (result or "").strip()
+    except Exception as exc:
+        log.error("[WhatsApp] Reply generation failed: %s", exc)
+        return ""
+
+
+def _execute_whatsapp_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
+    """Execute a WhatsApp plan — read exact chat name from original task, generate reply, send."""
+    # Step 1: Get exact chat name from the original task file (not Groq guess)
+    chat_name = _get_original_task_chat(plan_name)
+    if not chat_name:
+        log.error("[Execute] Could not find original task file for %s", plan_name)
+        return False, (
+            "## Execution Report\n\n"
+            f"Could not find original task file for `{plan_name}` to get chat name.\n\n"
+            "**Status: BLOCKED**"
+        )
+
+    log.info("[Execute] WhatsApp plan — replying to chat: '%s'", chat_name)
+
+    # Step 2: Generate reply message via Groq
+    message = _generate_whatsapp_reply(plan_content)
+    if not message:
+        return False, (
+            "## Execution Report\n\n"
+            "Groq could not generate a reply message.\n\n"
+            "**Status: BLOCKED**"
+        )
+
+    log.info("[Execute] Generated reply: %s", message[:80])
+
+    # Step 3: Send via WhatsApp
+    success = _send_whatsapp_reply(chat_name, message)
+    if success:
+        return True, (
+            f"## Execution Report\n\n"
+            f"| Step | Result |\n|------|--------|\n"
+            f"| WhatsApp reply to '{chat_name}' | Sent |\n"
+            f"| Message | {message[:100]} |\n"
+            f"| Move plan → `Vault/Done/` | Done |\n\n"
+            f"**Status: COMPLETE**"
+        )
+    else:
+        return False, (
+            f"## Execution Report\n\n"
+            f"Failed to send WhatsApp reply to '{chat_name}'.\n\n"
+            f"**Status: BLOCKED**"
+        )
+
+
 def _extract_email_fields(plan_content: str) -> dict | None:
     """
     Use Groq to extract email fields (to, subject, body) from an approved plan.
@@ -114,11 +221,14 @@ If no email needs to be sent, respond with exactly: NO_EMAIL"""
 
 def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
     """
-    Execute an approved plan:
-      1. Groq extracts email fields from the plan
-      2. Gmail API sends the email directly (no MCP subprocess needed)
+    Execute an approved plan — routes to WhatsApp reply or email based on source.
     Returns (success, report_markdown).
     """
+    source = _detect_source(plan_name, plan_content)
+    if source == "whatsapp":
+        return _execute_whatsapp_plan(plan_name, plan_content)
+
+    # Email path
     from gmail_mcp_server import send_email
 
     log.info("[Execute] Extracting email via Groq...")

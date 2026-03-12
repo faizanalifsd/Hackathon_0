@@ -1,0 +1,272 @@
+[
+  {
+    "timestamp": "2026-03-12T11:01:30.892313",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_110030_Zeeshan_Bro_37e60b.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_110030_Zeeshan_Bro_37e60b.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:01:36.575109",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_110030_Zeeshan_Bro_9dbf15.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_110030_Zeeshan_Bro_9dbf15.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:01:40.933783",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_110030_Zeeshan_Bro_d22a1c.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_110030_Zeeshan_Bro_d22a1c.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:02:23.531826",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260312_110030_Zeeshan_Bro_37e60b.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-12T11:02:26.040130",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260312_110030_Zeeshan_Bro_37e60b.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to zeeshan.bro@email.com | Sent (ID: `19ce0a3a4a424e0a`) |\n| Subject | Urgent Bike Need Solution |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-12T11:09:38.050347",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260312_110030_Zeeshan_Bro_d22a1c.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-12T11:09:40.843365",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260312_110030_Zeeshan_Bro_d22a1c.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to zeeshanbro@email.com | Sent (ID: `19ce0aa4770bef42`) |\n| Subject | Order Confirmation and Receipt for Invoice 56753578 |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-12T11:14:05.977471",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_111301_last_seen_today_at_1112_AM_9dbf15.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_9dbf15.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:14:09.584499",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_111301_last_seen_today_at_1112_AM_2c88b7.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_2c88b7.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:14:09.644496",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_111301_last_seen_today_at_1112_AM_37e60b.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_37e60b.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:14:10.342909",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_111301_last_seen_today_at_1112_AM_d22a1c.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_d22a1c.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:14:36.796364",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_111334_last_seen_today_at_1112_AM_b5190d.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_111334_last_seen_today_at_1112_AM_b5190d.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:15:00.717754",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260312_111334_last_seen_today_at_1112_AM_b5190d.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-12T11:15:03.999435",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260312_111334_last_seen_today_at_1112_AM_b5190d.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to blood.donation.center@email.com | Sent (ID: `19ce0af342192f65`) |\n| Subject | Urgent A Positive Blood Donation Request |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-12T11:18:32.178336",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_d22a1c.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-12T11:18:34.843852",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_d22a1c.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to recipient@email.com | Sent (ID: `19ce0b26d72e1949`) |\n| Subject | Order Confirmation and Invoice Processing |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-12T11:23:25.330959",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_37e60b.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-12T11:23:30.112806",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_37e60b.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'last seen today at 11:12 AM'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-12T11:26:09.172403",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_9dbf15.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-12T11:26:11.904139",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_9dbf15.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'last seen today at 11:12 AM'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-12T11:26:16.479992",
+    "action_type": "plan_deferred_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_2c88b7.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-12T11:31:54.857090",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260312_110030_Zeeshan_Bro_9dbf15.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-12T11:32:20.331989",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260312_110030_Zeeshan_Bro_9dbf15.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Bro'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-12T11:34:00.728911",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_113252_Zeeshan_Bro_37e60b.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_113252_Zeeshan_Bro_37e60b.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:34:04.344234",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_113252_Zeeshan_Bro_2c88b7.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_113252_Zeeshan_Bro_2c88b7.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:34:09.781972",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_113252_Zeeshan_Bro_b5190d.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_113252_Zeeshan_Bro_b5190d.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:34:20.895436",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_113252_Zeeshan_Bro_9dbf15.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_113252_Zeeshan_Bro_9dbf15.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:34:22.950171",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260312_113252_Zeeshan_Bro_d22a1c.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260312_113252_Zeeshan_Bro_d22a1c.md"
+  },
+  {
+    "timestamp": "2026-03-12T11:39:36.278770",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260312_113252_Zeeshan_Bro_2c88b7.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-12T11:40:03.602900",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260312_113252_Zeeshan_Bro_2c88b7.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Bro' | Sent |\n| Message | Thanks for notifying us about the expired invoice, we're on it and will process the payment as soon  |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  }
+]

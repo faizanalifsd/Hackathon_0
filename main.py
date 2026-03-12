@@ -5,12 +5,12 @@ Runs all watchers in threads and chains each step automatically via
 watchdog file-system events (no polling delays between steps).
 
 Pipeline:
-    gmail_watcher (every 2 min)
-        → Inbox/          (watchdog → instant triage)
-        → Needs_Action/   (watchdog → instant plan generation)
-        → Plans/          (YOU open, edit, tick checkbox, save)
-            ✅ Approve     → Approved/ → execution + email send → Done/
-            ⏸ Pending     → Pending_Approval/ (hold for later)
+    gmail_watcher (every 2 min)      ─┐
+    whatsapp_watcher (every 30s)     ─┤→ Inbox/ → triage → Needs_Action/
+                                       → plan generation → Plans/
+                                         (YOU open, tick checkbox, save)
+            ✅ Approve  → Approved/ → execution (email reply / WhatsApp reply) → Done/
+            ⏸ Pending  → Pending_Approval/ (hold for later)
 
 Usage:
     uv run python main.py
@@ -77,6 +77,25 @@ def _gmail_poll_loop(interval: int = 120):
         except Exception as exc:
             log.error("[Gmail] Poll error: %s", exc)
         time.sleep(interval)
+
+
+# ---------------------------------------------------------------------------
+# Step 1b: WhatsApp watcher thread
+# ---------------------------------------------------------------------------
+
+def _whatsapp_poll_loop():
+    """Run WhatsApp watcher in daemon mode — polls every 30s and writes messages to Inbox/."""
+    try:
+        from whatsapp_watcher import run_watcher
+    except ImportError as e:
+        log.error("[WhatsApp] Import failed: %s", e)
+        return
+
+    log.info("[WhatsApp] Starting WhatsApp watcher daemon (every 30s)...")
+    try:
+        run_watcher(daemon=True)
+    except Exception as exc:
+        log.error("[WhatsApp] Watcher crashed: %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -392,11 +411,18 @@ def main():
     gmail_thread.start()
     log.info("[Gmail]      Polling Gmail every 2 min for unread important emails")
 
+    # WhatsApp watcher in background thread
+    whatsapp_thread = threading.Thread(
+        target=_whatsapp_poll_loop, daemon=True, name="whatsapp-watcher"
+    )
+    whatsapp_thread.start()
+    log.info("[WhatsApp]   WhatsApp watcher running every 30s for keyword-matched messages")
+
     log.info("")
     log.info("Pipeline ready. Your only job:")
     log.info("  1. Open a PLAN_*.md in Vault/Plans/ (Obsidian)")
     log.info("  2. Edit if needed, then tick one checkbox:")
-    log.info("       - [x] ✅ Approve  → executes immediately (sends email)")
+    log.info("       - [x] ✅ Approve  → executes immediately (sends email or WhatsApp reply)")
     log.info("       - [x] ⏸ Pending Approval  → holds in Pending_Approval/ for later")
     log.info("  3. Save the file — pipeline routes it automatically.")
     log.info("")

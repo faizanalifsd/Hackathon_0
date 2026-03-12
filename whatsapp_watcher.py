@@ -25,11 +25,16 @@ Config:
 import argparse
 import logging
 import os
+import queue
 import re
 import sys
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
+
+from dotenv import load_dotenv
+load_dotenv()
 
 # ---------------------------------------------------------------------------
 # Config
@@ -40,11 +45,32 @@ VAULT_ROOT = BASE_DIR / "Vault"
 INBOX_DIR = VAULT_ROOT / "Inbox"
 SESSION_DIR = BASE_DIR / "whatsapp_session"
 LOG_FILE = BASE_DIR / "whatsapp_watcher.log"
+SEEN_IDS_FILE = BASE_DIR / "whatsapp_seen.json"  # persists seen message IDs across restarts
 
 # Keywords to filter — empty list = capture all new messages
 WATCH_KEYWORDS_DEFAULT = []  # empty = capture ALL messages
 POLL_INTERVAL_SECONDS = 30  # check every 30 seconds in daemon mode
 SCAN_DURATION_SECONDS = 15  # how long to scan for new messages each poll
+
+# ---------------------------------------------------------------------------
+# Outgoing message queue  (approval_watcher puts items here; watcher sends them)
+# ---------------------------------------------------------------------------
+
+# Each item: (chat_name: str, message: str, result: list[bool], done_event: threading.Event)
+_send_queue: queue.Queue = queue.Queue()
+
+
+def send_whatsapp_message(chat_name: str, message: str, timeout: int = 90) -> bool:
+    """
+    Thread-safe: enqueue a message for the running watcher to send.
+    Blocks until the watcher confirms it was sent (or timeout).
+    """
+    result = [False]
+    done = threading.Event()
+    _send_queue.put((chat_name, message, result, done))
+    done.wait(timeout=timeout)
+    return result[0]
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,6 +87,26 @@ log = logging.getLogger("whatsapp-watcher")
 # Helpers
 # ---------------------------------------------------------------------------
 
+def load_seen_ids() -> set:
+    """Load persisted seen message IDs from disk."""
+    import json
+    if SEEN_IDS_FILE.exists():
+        try:
+            return set(json.loads(SEEN_IDS_FILE.read_text(encoding="utf-8")))
+        except Exception:
+            return set()
+    return set()
+
+
+def save_seen_ids(seen: set):
+    """Persist seen message IDs to disk."""
+    import json
+    try:
+        SEEN_IDS_FILE.write_text(json.dumps(list(seen)), encoding="utf-8")
+    except Exception as e:
+        log.warning("Could not save seen IDs: %s", e)
+
+
 def get_keywords() -> list[str]:
     raw = os.environ.get("WHATSAPP_KEYWORDS", "")
     if raw:
@@ -70,7 +116,7 @@ def get_keywords() -> list[str]:
 
 def message_matches(text: str, keywords: list[str]) -> bool:
     if not keywords:
-        return True
+        return False  # No keywords configured → capture nothing
     lower = text.lower()
     return any(kw in lower for kw in keywords)
 
@@ -137,9 +183,10 @@ def run_watcher(daemon: bool = False):
                 pass
 
     keywords = get_keywords()
-    log.info("Watching for keywords: %s", keywords if keywords else "(all messages)")
+    log.info("Watching for keywords: %s", keywords if keywords else "(none — no messages will be captured)")
 
-    seen_message_ids: set[str] = set()
+    seen_message_ids: set[str] = load_seen_ids()
+    log.info("Loaded %d seen message IDs from disk.", len(seen_message_ids))
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch_persistent_context(
@@ -187,6 +234,15 @@ def run_watcher(daemon: bool = False):
 
                 for badge in unread_chats:
                     try:
+                        # Read unread count from badge BEFORE clicking (clicking clears it)
+                        unread_count = 10  # safe fallback
+                        try:
+                            badge_text = badge.inner_text().strip()
+                            if badge_text.isdigit():
+                                unread_count = int(badge_text)
+                        except Exception:
+                            pass
+
                         # Click the parent chat row — walk up the DOM to find a clickable row
                         clicked = False
                         for container in [
@@ -215,18 +271,22 @@ def run_watcher(daemon: bool = False):
                                 continue
                         time.sleep(1)
 
-                        # Get chat name — try multiple selectors
+                        # Get chat name — try title attribute first (avoids "last seen" text)
                         chat_name = "Unknown"
                         for sel in [
                             '[data-testid="conversation-info-header-chat-title"]',
                             'header [data-testid="conversation-title"]',
                             'header span[title]',
+                            '#main header span[dir="auto"][title]',
                             '#main header span[dir="auto"]',
                         ]:
                             el = page.query_selector(sel)
                             if el:
-                                chat_name = el.inner_text().strip() or el.get_attribute("title") or "Unknown"
-                                break
+                                # Prefer title attribute — it has the real name, not status text
+                                name = el.get_attribute("title") or el.inner_text().strip()
+                                if name and "last seen" not in name.lower() and "online" not in name.lower():
+                                    chat_name = name
+                                    break
 
                         # Get last few messages — try multiple selectors
                         msgs = []
@@ -245,7 +305,7 @@ def run_watcher(daemon: bool = False):
                         if not msgs:
                             msgs = page.query_selector_all('.copyable-text')
 
-                        for msg_el in msgs[-10:]:  # last 10 messages
+                        for msg_el in msgs[-unread_count:]:  # only truly unread messages
                             try:
                                 # Extract text — try specific selectors then full inner text
                                 text = ""
@@ -274,6 +334,7 @@ def run_watcher(daemon: bool = False):
                                 if msg_id in seen_message_ids:
                                     continue
                                 seen_message_ids.add(msg_id)
+                                save_seen_ids(seen_message_ids)
 
                                 if message_matches(text, keywords):
                                     try:
@@ -303,6 +364,97 @@ def run_watcher(daemon: bool = False):
             except Exception:
                 return False
 
+        def do_send_message(chat_name: str, message: str) -> bool:
+            """Send a WhatsApp message to `chat_name` using the current page."""
+            try:
+                # 1. Open the search box
+                search_box = None
+                for search_sel in [
+                    '[data-testid="search"]',
+                    'div[contenteditable="true"][data-tab="3"]',
+                    '[title="Search input textbox"]',
+                    'div[role="textbox"][title]',
+                ]:
+                    el = page.query_selector(search_sel)
+                    if el:
+                        search_box = el
+                        break
+
+                if not search_box:
+                    log.error("[WA] Could not find search box.")
+                    return False
+
+                search_box.click()
+                time.sleep(0.5)
+                # Clear then type
+                search_box.fill("")
+                search_box.type(chat_name, delay=50)
+                time.sleep(2.5)  # wait for search results
+
+                # 2. Click the matching chat row
+                clicked = False
+                for row_sel in [
+                    '[data-testid="cell-frame-container"]',
+                    '[role="listitem"]',
+                    'div[tabindex="-1"]',
+                ]:
+                    rows = page.query_selector_all(row_sel)
+                    if rows:
+                        rows[0].click()
+                        clicked = True
+                        break
+
+                if not clicked:
+                    log.error("[WA] Could not find chat row for '%s'.", chat_name)
+                    return False
+
+                time.sleep(2)  # wait for chat to open fully
+
+                # 3. Find and use the compose box
+                compose_box = None
+                for compose_sel in [
+                    'div[contenteditable="true"][data-tab="10"]',
+                    'div[contenteditable="true"][spellcheck="true"]',
+                    'div[role="textbox"][data-tab="10"]',
+                    'footer div[contenteditable="true"]',
+                    'div[contenteditable="true"][class*="copyable"]',
+                    'div[contenteditable="true"]',  # broad fallback
+                ]:
+                    el = page.query_selector(compose_sel)
+                    if el:
+                        compose_box = el
+                        break
+
+                if not compose_box:
+                    log.error("[WA] Could not find compose box to send reply.")
+                    return False
+
+                compose_box.click()
+                time.sleep(0.3)
+                compose_box.fill(message)
+                time.sleep(0.3)
+                page.keyboard.press("Enter")
+                time.sleep(1)
+                log.info("[WA] ✅ Reply sent to '%s'", chat_name)
+                return True
+
+            except Exception as exc:
+                log.error("[WA] do_send_message failed: %s", exc)
+                return False
+
+        def process_send_queue():
+            """Process any pending outgoing messages from the send queue."""
+            while not _send_queue.empty():
+                try:
+                    chat_name, message, result, done_event = _send_queue.get_nowait()
+                    log.info("[WA] Sending queued reply to '%s'", chat_name)
+                    result[0] = do_send_message(chat_name, message)
+                    done_event.set()
+                except queue.Empty:
+                    break
+                except Exception as exc:
+                    log.error("[WA] Queue processing error: %s", exc)
+
         def reconnect() -> bool:
             """Try to reopen WhatsApp Web on the existing browser context."""
             nonlocal page
@@ -329,6 +481,8 @@ def run_watcher(daemon: bool = False):
                             log.error("[WA] Could not reconnect — waiting 30s before retry...")
                             time.sleep(30)
                             continue
+                    # Send any queued outgoing replies BEFORE scanning
+                    process_send_queue()
                     n = scan_once()
                     if n:
                         log.info("Captured %d message(s) -> Vault/Inbox/", n)
