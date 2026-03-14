@@ -451,6 +451,7 @@ def run_watcher(daemon: bool = False):
                     '[data-testid="cell-frame-container"]',
                     '[role="listitem"]',
                     'div[tabindex="-1"]',
+                    'li',
                 ]:
                     rows = page.query_selector_all(row_sel)
                     for row in rows:
@@ -476,17 +477,26 @@ def run_watcher(daemon: bool = False):
                 time.sleep(2)  # wait for chat to open fully
 
                 # 3. Verify the correct chat is now open (header must match)
+                # Filter out subtitle lines like "click here for contact info", "last seen", etc.
+                _INVALID = {"last seen", "online", "click here", "contact info", "unknown", "typing"}
+
+                def _valid_header(n: str) -> bool:
+                    n_l = n.lower()
+                    return bool(n) and not any(bad in n_l for bad in _INVALID)
+
                 open_chat_name = ""
                 for sel in [
                     '[data-testid="conversation-info-header-chat-title"]',
                     'header span[title]',
                     '#main header span[dir="auto"]',
                 ]:
-                    el = page.query_selector(sel)
-                    if el:
-                        open_chat_name = (el.get_attribute("title") or el.inner_text()).strip()
-                        if open_chat_name:
+                    for el in page.query_selector_all(sel):
+                        candidate = (el.get_attribute("title") or el.inner_text()).strip()
+                        if _valid_header(candidate):
+                            open_chat_name = candidate
                             break
+                    if open_chat_name:
+                        break
 
                 if open_chat_name.lower() != chat_name.lower():
                     log.error("[WA] Safety check FAILED — open chat is '%s', expected '%s'. Aborting.",
