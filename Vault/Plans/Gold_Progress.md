@@ -43,37 +43,52 @@ updated: 2026-03-14
 
 ---
 
-## Feature 3: Autonomous Loop (Ralph Wiggum) — IN PROGRESS
+## Feature 3: Autonomous Loop (Ralph Wiggum) ✅ COMPLETE (2026-03-14)
 
-**Status:** Pending
+**Status:** Done
 
-**Plan:**
-- `reasoning_loop.py` already handles Needs_Action → Plans
-- Need to add: Plans auto-execute when no human approval required (low-risk tasks)
-- Stop hook: if the same file appears in Needs_Action 3+ times, escalate to CEO briefing
-
----
-
-## Feature 4: Weekly Business Audit + CEO Briefing — PENDING
-
-**Status:** Pending
-
-**Plan:**
-- Sunday 10 PM cron: scan all Vault activity from past week
-- Generate CEO briefing email via Gmail MCP
-- Schedule via `schedule_setup.py`
+**What was built:**
+- `reasoning_loop.py` — extended with:
+  - `_increment_retry()` / `_clear_retry()` — per-task retry tracking via `reasoning_retries.json`
+  - `_escalate_to_ceo()` — writes `CEO_BRIEFING_*.md` to Needs_Action/ if task retried > 3 times
+  - `_auto_execute_plan()` — copies plan to Approved/, calls `approval_watcher.process_approved_plan()` directly
+  - Auto-execute path: if `approval_needed: no` in plan frontmatter, plan executes without human touch
+  - Manual path unchanged: `approval_needed: yes` → moves to `Pending_Approval/`
 
 ---
 
-## Feature 5: Error Recovery & Graceful Degradation — PENDING
+## Feature 4: Weekly CEO Briefing ✅ COMPLETE (2026-03-14)
 
-**Status:** Pending
+**Status:** Done
+
+**What was built:**
+- `ceo_briefing.py` — collects weekly vault data, generates AI briefing, emails to `CEO_EMAIL`
+  - Scans: Done/, Inbox/, Pending_Approval/, Logs/
+  - Counts: emails handled, WhatsApp conversations, plans executed, social posts
+  - Falls back to saving briefing in Vault/Needs_Action/ if email fails
+- Schedule: Sunday 10 PM via Windows Task Scheduler (`AIEmployee_CEOBriefing`)
+- `.env`: Added `CEO_EMAIL=` placeholder
+
+---
+
+## Feature 5: Error Recovery & Graceful Degradation ✅ COMPLETE (2026-03-14)
+
+**Status:** Done
+
+**What was built:**
+- `error_recovery.py`:
+  - `ErrorRecovery(component, operation)` context manager — catches exceptions, writes recovery note to Needs_Action/
+  - `_recovery_suggestion()` — intelligent recovery hints based on error type (auth, rate limit, network, etc.)
+  - `health_check()` — tests Groq, Gmail token, Calendar token, WhatsApp session, Vault folders
+  - `print_health_report()` — formatted health output
+  - `recover_stale_inbox()` — re-queues inbox items stuck >24h
+- `main.py` — startup health check + ErrorRecovery wrapping around triage and plan generation
 
 ---
 
 ## Feature 6: Comprehensive Audit Logging — PARTIAL
 
 **Status:** Partial — `vault_io.py` `log_action()` already writes to `Vault/Logs/`
-- Need: log rotation, structured JSON export, weekly summary
+- Weekly summary now included in CEO Briefing (Feature 4)
 
 ---

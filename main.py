@@ -104,6 +104,7 @@ def _whatsapp_poll_loop():
 
 def _triage_file(path: Path, vault: VaultIO):
     """Run vault-triage on a new Inbox file via claude CLI."""
+    from error_recovery import ErrorRecovery
     import subprocess, shutil
     rel = path.relative_to(vault.root)
     log.info("[Triage] Processing: %s", path.name)
@@ -143,7 +144,7 @@ def _triage_file(path: Path, vault: VaultIO):
 
     # Fallback: classify via router then move to Needs_Action
     log.info("[Triage] Fallback: classifying %s via router → Needs_Action/", path.name)
-    try:
+    with ErrorRecovery("triage", f"Fallback triage of {path.name}"):
         classification = {"priority": "medium", "summary": "Auto-triaged — review needed"}
         try:
             from router import classify_email
@@ -162,8 +163,6 @@ def _triage_file(path: Path, vault: VaultIO):
         vault.update_dashboard(
             recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Fallback triage: `{path.name}` → Needs_Action"
         )
-    except Exception as exc:
-        log.error("[Triage] Fallback failed: %s", exc)
 
 
 class InboxHandler(FileSystemEventHandler):
@@ -192,6 +191,7 @@ class InboxHandler(FileSystemEventHandler):
 
 def _plan_file(path: Path, vault: VaultIO):
     """Generate a plan for a newly triaged Needs_Action item."""
+    from error_recovery import ErrorRecovery
     from reasoning_loop import _plan_exists, _generate_plan_via_router, _generate_plan_fallback, _parse_plan_frontmatter_approval
 
     task_name = path.name
@@ -206,28 +206,25 @@ def _plan_file(path: Path, vault: VaultIO):
         log.error("[Plan] Cannot read %s: %s", task_name, exc)
         return
 
-    plan_content = _generate_plan_via_router(task_name, task_content)
-    if not plan_content:
-        log.warning("[Plan] Using fallback plan for %s", task_name)
-        plan_content = _generate_plan_fallback(task_name, task_content)
+    with ErrorRecovery("plan_generator", f"Generate plan for {task_name}"):
+        plan_content = _generate_plan_via_router(task_name, task_content)
+        if not plan_content:
+            log.warning("[Plan] Using fallback plan for %s", task_name)
+            plan_content = _generate_plan_fallback(task_name, task_content)
 
-    try:
         plan_path = vault.write_plan(task_name, plan_content)
         log.info("[Plan] Written → %s", plan_path.name)
-    except Exception as exc:
-        log.error("[Plan] Failed to write plan: %s", exc)
-        return
 
-    vault.log_action(
-        action_type="plan_generated", actor="main",
-        target=task_name, approval_status="auto", result="success",
-        details=f"Plan written to {plan_path.name}",
-    )
+        vault.log_action(
+            action_type="plan_generated", actor="main",
+            target=task_name, approval_status="auto", result="success",
+            details=f"Plan written to {plan_path.name}",
+        )
 
-    log.info("[Plan] Plan written to Plans/ → open in Obsidian, tick a checkbox, save to route it")
-    vault.update_dashboard(
-        recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Plan generated: `{plan_path.name}`"
-    )
+        log.info("[Plan] Plan written to Plans/ → open in Obsidian, tick a checkbox, save to route it")
+        vault.update_dashboard(
+            recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Plan generated: `{plan_path.name}`"
+        )
 
 
 class NeedsActionHandler(FileSystemEventHandler):
@@ -383,6 +380,21 @@ def main():
     log.info("=" * 60)
     log.info("AI Vault Pipeline starting...")
     log.info("=" * 60)
+
+    # Startup health check
+    try:
+        from error_recovery import health_check, print_health_report, recover_stale_inbox
+        health = health_check()
+        errors = [k for k, v in health.items() if v["status"] == "error"]
+        if errors:
+            log.warning("[HealthCheck] Issues found: %s", ", ".join(errors))
+        else:
+            log.info("[HealthCheck] All components healthy.")
+        n_stale = recover_stale_inbox()
+        if n_stale:
+            log.info("[HealthCheck] Recovered %d stale inbox item(s).", n_stale)
+    except Exception as exc:
+        log.warning("[HealthCheck] Could not run health check: %s", exc)
 
     observer = Observer()
 

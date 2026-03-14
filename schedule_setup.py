@@ -73,6 +73,14 @@ def install_tasks():
             "command": str(UV),
             "args": f'{PYTHON_ARGS} python social_scheduler.py --linkedin',
         },
+        {
+            "name": "AIEmployee_CEOBriefing",
+            "description": "Sunday 10 PM — Weekly audit + CEO briefing email",
+            "days": "SUN",
+            "time": "22:00",
+            "command": str(UV),
+            "args": f'{PYTHON_ARGS} python ceo_briefing.py',
+        },
     ]
 
     print("Installing scheduled tasks...")
@@ -133,6 +141,7 @@ def remove_tasks():
         "AIEmployee_ApprovalWatcher",
         "AIEmployee_SocialFB_IG",
         "AIEmployee_SocialLinkedIn",
+        "AIEmployee_CEOBriefing",
     ]
     print("Removing scheduled tasks...")
     for name in task_names:
@@ -149,6 +158,7 @@ def show_status():
         "AIEmployee_ApprovalWatcher",
         "AIEmployee_SocialFB_IG",
         "AIEmployee_SocialLinkedIn",
+        "AIEmployee_CEOBriefing",
     ]
     print("Scheduled task status:")
     for name in task_names:
