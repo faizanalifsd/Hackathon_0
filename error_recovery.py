@@ -141,7 +141,7 @@ def _recovery_suggestion(component: str, error_msg: str) -> str:
                 "Run: `uv run python whatsapp_watcher.py` to restart the watcher.")
 
     if "gmail" in component.lower():
-        return ("**Gmail Issue** — check that `gmail_token.json` exists and is valid.\n"
+        return ("**Gmail Issue** — check that `token.json` exists and is valid.\n"
                 "Run: `uv run python gmail_watcher.py` to re-authenticate.")
 
     if "groq" in error_lower or "openrouter" in error_lower:
@@ -172,10 +172,10 @@ def health_check() -> dict:
         results["groq"] = {"status": "error", "detail": str(exc)}
 
     # Gmail token
-    token_path = BASE_DIR / "gmail_token.json"
+    token_path = BASE_DIR / "token.json"
     results["gmail_token"] = {
         "status": "ok" if token_path.exists() else "error",
-        "detail": "Token file exists" if token_path.exists() else "gmail_token.json missing — run gmail_watcher.py",
+        "detail": "token.json exists" if token_path.exists() else "token.json missing — run gmail_watcher.py to authenticate",
     }
 
     # Calendar token

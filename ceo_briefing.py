@@ -12,7 +12,7 @@ Usage:
 Setup:
     Add to .env:
         CEO_EMAIL=your@email.com
-    Ensure Gmail OAuth is authorized (credentials.json / gmail_token.json present).
+    Ensure Gmail OAuth is authorized (credentials.json / token.json present).
 """
 
 import argparse
