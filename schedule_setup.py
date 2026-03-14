@@ -1,10 +1,12 @@
 """
-schedule_setup.py – Windows Task Scheduler setup for Silver Tier.
+schedule_setup.py – Windows Task Scheduler setup (Silver + Gold Tier).
 
 Creates scheduled tasks for:
   1. Daily 8 AM Briefing  — runs reasoning_loop.py
   2. Hourly Gmail fetch   — runs gmail_watcher.py
   3. Approval watcher     — runs approval_watcher.py --daemon (on login)
+  4. FB + IG posts        — runs social_scheduler.py --facebook --instagram (Tue/Thu 9 AM)
+  5. LinkedIn posts       — runs social_scheduler.py --linkedin (Mon/Wed 8 AM)
 
 Run as Administrator:
     uv run python schedule_setup.py --install
@@ -51,13 +53,25 @@ def install_tasks():
             "command": str(UV),
             "args": f'{PYTHON_ARGS} python gmail_watcher.py',
         },
+    ]
+
+    # Social media tasks require WEEKLY schedule with specific days
+    social_tasks = [
         {
-            "name": "AIEmployee_LinkedInPost",
-            "description": "Daily 9 AM — Generate LinkedIn post draft from vault leads",
-            "schedule": "DAILY",
+            "name": "AIEmployee_SocialFB_IG",
+            "description": "Tue/Thu 9 AM — Generate Facebook + Instagram post drafts",
+            "days": "TUE,THU",
             "time": "09:00",
             "command": str(UV),
-            "args": f'{PYTHON_ARGS} python linkedin_poster.py --generate',
+            "args": f'{PYTHON_ARGS} python social_scheduler.py --facebook --instagram',
+        },
+        {
+            "name": "AIEmployee_SocialLinkedIn",
+            "description": "Mon/Wed 8 AM — Generate LinkedIn post draft",
+            "days": "MON,WED",
+            "time": "08:00",
+            "command": str(UV),
+            "args": f'{PYTHON_ARGS} python social_scheduler.py --linkedin',
         },
     ]
 
@@ -75,6 +89,23 @@ def install_tasks():
         )
         status = "OK" if rc == 0 else f"FAILED (code {rc})"
         print(f"  [{status}] {task['name']}")
+        if rc != 0:
+            print(f"         {out.strip()}")
+
+    # Social tasks use WEEKLY schedule with specific days
+    for task in social_tasks:
+        rc, out = _schtasks(
+            "/Create",
+            "/F",
+            "/TN", task["name"],
+            "/TR", f'"{task["command"]}" {task["args"]}',
+            "/SC", "WEEKLY",
+            "/D", task["days"],
+            "/ST", task["time"],
+            "/RL", "HIGHEST",
+        )
+        status = "OK" if rc == 0 else f"FAILED (code {rc})"
+        print(f"  [{status}] {task['name']} ({task['days']} @ {task['time']})")
         if rc != 0:
             print(f"         {out.strip()}")
 
@@ -100,6 +131,8 @@ def remove_tasks():
         "AIEmployee_GmailFetch",
         "AIEmployee_LinkedInPost",
         "AIEmployee_ApprovalWatcher",
+        "AIEmployee_SocialFB_IG",
+        "AIEmployee_SocialLinkedIn",
     ]
     print("Removing scheduled tasks...")
     for name in task_names:
@@ -114,6 +147,8 @@ def show_status():
         "AIEmployee_GmailFetch",
         "AIEmployee_LinkedInPost",
         "AIEmployee_ApprovalWatcher",
+        "AIEmployee_SocialFB_IG",
+        "AIEmployee_SocialLinkedIn",
     ]
     print("Scheduled task status:")
     for name in task_names:

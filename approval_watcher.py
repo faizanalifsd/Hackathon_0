@@ -352,16 +352,64 @@ result: {result_str}
     )
 
 
+def process_approved_social_post(vault: VaultIO, post_path: Path) -> None:
+    """Process a single approved social media post file (Facebook/Instagram/LinkedIn)."""
+    name = post_path.name
+    log.info("Processing approved social post: %s", name)
+    try:
+        if name.startswith("FACEBOOK_POST_"):
+            from facebook_mcp_server import publish_approved_facebook_posts
+            count = publish_approved_facebook_posts()
+            log.info("[Facebook] Published %d post(s).", count)
+        elif name.startswith("INSTAGRAM_POST_"):
+            from instagram_mcp_server import publish_approved_instagram_posts
+            count = publish_approved_instagram_posts()
+            log.info("[Instagram] Published %d post(s).", count)
+        elif name.startswith("LINKEDIN_POST_"):
+            from vault_io import VaultIO as _VaultIO
+            from linkedin_poster import publish_approved_posts
+            count = publish_approved_posts(vault)
+            log.info("[LinkedIn] Published %d post(s).", count)
+        vault.log_action(
+            action_type="social_post_published",
+            actor="approval_watcher",
+            target=name,
+            approval_status="approved",
+            result="success",
+        )
+    except Exception as exc:
+        log.error("Social post publish failed for %s: %s", name, exc)
+        vault.log_action(
+            action_type="social_post_published",
+            actor="approval_watcher",
+            target=name,
+            approval_status="approved",
+            result="failed",
+            details=str(exc),
+        )
+
+
 def process_all_approved(vault: VaultIO) -> int:
-    """Process all PLAN_*.md files currently in Approved/. Returns count processed."""
+    """Process all PLAN_*.md and social post files currently in Approved/. Returns count processed."""
     APPROVED_DIR.mkdir(parents=True, exist_ok=True)
-    items = list(APPROVED_DIR.glob("PLAN_*.md"))
-    if not items:
-        log.info("No approved items to process.")
-        return 0
-    for plan_path in items:
+
+    # Plans (WhatsApp / email)
+    plans = list(APPROVED_DIR.glob("PLAN_*.md"))
+    for plan_path in plans:
         process_approved_plan(vault, plan_path)
-    return len(items)
+
+    # Social media posts
+    social_patterns = ["FACEBOOK_POST_*.md", "INSTAGRAM_POST_*.md", "LINKEDIN_POST_*.md"]
+    social_posts = []
+    for pat in social_patterns:
+        social_posts.extend(APPROVED_DIR.glob(pat))
+    for post_path in social_posts:
+        process_approved_social_post(vault, post_path)
+
+    total = len(plans) + len(social_posts)
+    if total == 0:
+        log.info("No approved items to process.")
+    return total
 
 
 # ---------------------------------------------------------------------------
@@ -373,11 +421,16 @@ class ApprovedHandler(FileSystemEventHandler):
         self.vault = vault
 
     def _handle(self, path: Path):
-        if path.name.startswith("PLAN_") and path.suffix.lower() == ".md" and path.parent == APPROVED_DIR:
-            log.info("New approved item detected: %s", path.name)
-            # Small delay to ensure file is fully written
-            time.sleep(1)
+        if path.suffix.lower() != ".md" or path.parent != APPROVED_DIR:
+            return
+        name = path.name
+        time.sleep(1)  # ensure file is fully written
+        if name.startswith("PLAN_"):
+            log.info("New approved plan detected: %s", name)
             process_approved_plan(self.vault, path)
+        elif any(name.startswith(p) for p in ("FACEBOOK_POST_", "INSTAGRAM_POST_", "LINKEDIN_POST_")):
+            log.info("New approved social post detected: %s", name)
+            process_approved_social_post(self.vault, path)
 
     def on_created(self, event):
         if not event.is_directory:
