@@ -227,22 +227,38 @@ def _extract_email_fields(plan_content: str) -> dict | None:
 
 def _get_original_task_sender(plan_name: str) -> str | None:
     """
-    Read the `from:` frontmatter field from the original task file.
-    Returns the raw From header value (e.g. 'Name <email@x.com>') or None.
+    Read the sender's email from the original task file.
+    Checks `from:` frontmatter first, then scans the body for email addresses.
+    Returns a valid email address (containing @) or None.
     """
     import re
+    EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}")
+
     task_name = plan_name.removeprefix("PLAN_")
     for folder in ["Needs_Action", "Inbox", "Done"]:
         task_path = VAULT_ROOT / folder / task_name
-        if task_path.exists():
-            for line in task_path.read_text(encoding="utf-8").splitlines():
-                if line.strip().lower().startswith("from:"):
-                    raw = line.split(":", 1)[1].strip()
-                    # Extract bare email address from "Name <email>" format
-                    match = re.search(r"<([^>]+)>", raw)
-                    if match:
-                        return match.group(1).strip()
-                    return raw.strip()
+        if not task_path.exists():
+            continue
+        content = task_path.read_text(encoding="utf-8")
+        for line in content.splitlines():
+            stripped = line.strip().lower()
+            # Check from: and from_name: frontmatter fields
+            if stripped.startswith("from:") or stripped.startswith("from_name:"):
+                raw = line.split(":", 1)[1].strip()
+                # Prefer email in angle brackets
+                match = re.search(r"<([^>]+@[^>]+)>", raw)
+                if match:
+                    return match.group(1).strip()
+                # Direct email with @ sign
+                match = EMAIL_RE.search(raw)
+                if match:
+                    return match.group(0)
+        # Last resort: scan entire file for first email address
+        match = EMAIL_RE.search(content)
+        if match:
+            found = match.group(0)
+            log.info("[Sender] Extracted email from body: %s", found)
+            return found
     return None
 
 
@@ -272,11 +288,22 @@ def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
     real_sender = _get_original_task_sender(plan_name)
     if real_sender:
         if fields["to"] != real_sender:
-            log.info("[Execute] Correcting TO: Groq said '%s' → using real sender '%s'",
+            log.info("[Execute] Correcting TO: plan said '%s' → real sender '%s'",
                      fields["to"], real_sender)
         fields["to"] = real_sender
     else:
-        log.warning("[Execute] Could not find original task file to verify sender — using Groq's TO: %s", fields["to"])
+        log.warning("[Execute] Could not resolve real sender — using plan's TO: %s", fields["to"])
+
+    # Safety gate: block send if TO doesn't look like a valid email
+    if "@" not in fields.get("to", ""):
+        log.error("[Execute] TO '%s' is not a valid email address — aborting send.", fields["to"])
+        return False, (
+            f"## Execution Report\n\n"
+            f"Could not determine a valid recipient email address (got: `{fields['to']}`).\n\n"
+            f"**Action Required:** Edit the `## Email Reply` section in the plan, "
+            f"set `TO:` to the correct email address, and move to `Approved/` again.\n\n"
+            f"**Status: BLOCKED**"
+        )
 
     log.info("[Execute] Sending to %s — %s", fields["to"], fields["subject"])
     try:
