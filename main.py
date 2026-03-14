@@ -392,7 +392,10 @@ class ApprovedHandler(FileSystemEventHandler):
 # Main
 # ---------------------------------------------------------------------------
 
-def main():
+def main(args=None):
+    if args is None:
+        import argparse
+        args = argparse.Namespace(no_whatsapp=False)
     vault = VaultIO()
 
     # Ensure all folders exist
@@ -445,12 +448,15 @@ def main():
     gmail_thread.start()
     log.info("[Gmail]      Polling Gmail every 2 min for unread important emails")
 
-    # WhatsApp watcher in background thread
-    whatsapp_thread = threading.Thread(
-        target=_whatsapp_poll_loop, daemon=True, name="whatsapp-watcher"
-    )
-    whatsapp_thread.start()
-    log.info("[WhatsApp]   WhatsApp watcher running every 30s for keyword-matched messages")
+    # WhatsApp watcher in background thread (skip if --no-whatsapp)
+    if not args.no_whatsapp:
+        whatsapp_thread = threading.Thread(
+            target=_whatsapp_poll_loop, daemon=True, name="whatsapp-watcher"
+        )
+        whatsapp_thread.start()
+        log.info("[WhatsApp]   WhatsApp watcher running every 30s for keyword-matched messages")
+    else:
+        log.info("[WhatsApp]   Skipped (--no-whatsapp). Run separately: uv run python whatsapp_watcher.py --daemon")
 
     log.info("")
     log.info("Pipeline ready. Your only job:")
@@ -474,4 +480,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(description="AI Vault Pipeline")
+    parser.add_argument("--no-whatsapp", action="store_true",
+                        help="Skip WhatsApp watcher (run whatsapp_watcher.py --daemon separately)")
+    args = parser.parse_args()
+    main(args)
