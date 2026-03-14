@@ -84,18 +84,31 @@ def _gmail_poll_loop(interval: int = 120):
 # ---------------------------------------------------------------------------
 
 def _whatsapp_poll_loop():
-    """Run WhatsApp watcher in daemon mode — polls every 30s and writes messages to Inbox/."""
+    """Run WhatsApp watcher in daemon mode — auto-restarts on crash."""
     try:
         from whatsapp_watcher import run_watcher
     except ImportError as e:
         log.error("[WhatsApp] Import failed: %s", e)
         return
 
-    log.info("[WhatsApp] Starting WhatsApp watcher daemon (every 30s)...")
-    try:
-        run_watcher(daemon=True)
-    except Exception as exc:
-        log.error("[WhatsApp] Watcher crashed: %s", exc)
+    while True:
+        # Clear stale lock files before each launch attempt
+        session_dir = BASE_DIR / "whatsapp_session"
+        for lock in ["lockfile", "SingletonLock", "SingletonSocket", "SingletonCookie"]:
+            lp = session_dir / lock
+            try:
+                if lp.exists():
+                    lp.unlink()
+                    log.info("[WhatsApp] Cleared lock: %s", lock)
+            except Exception:
+                pass
+
+        log.info("[WhatsApp] Starting WhatsApp watcher daemon (every 30s)...")
+        try:
+            run_watcher(daemon=True)
+        except Exception as exc:
+            log.error("[WhatsApp] Watcher crashed: %s — restarting in 15s...", exc)
+            time.sleep(15)
 
 
 # ---------------------------------------------------------------------------
