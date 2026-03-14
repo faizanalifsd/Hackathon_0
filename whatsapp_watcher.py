@@ -296,6 +296,8 @@ def run_watcher(daemon: bool = False):
                             log.warning("Skipping chat — could not resolve contact name (contact not saved?).")
                             continue
 
+                        log.info("[WA] Opened chat: '%s' | unread count: %d", chat_name, unread_count)
+
                         # Get last few messages — try multiple selectors
                         msgs = []
                         for sel in [
@@ -306,12 +308,16 @@ def run_watcher(daemon: bool = False):
                         ]:
                             msgs = page.query_selector_all(sel)
                             if msgs:
-                                log.debug("Found %d messages via selector: %s", len(msgs), sel)
+                                log.info("[WA] Found %d message element(s) via: %s", len(msgs), sel)
                                 break
 
                         # Fallback: grab all copyable-text spans in the conversation
                         if not msgs:
                             msgs = page.query_selector_all('.copyable-text')
+                            log.info("[WA] Fallback: found %d copyable-text element(s)", len(msgs))
+
+                        if not msgs:
+                            log.warning("[WA] No message elements found in chat '%s' — selector may be outdated.", chat_name)
 
                         for msg_el in msgs[-unread_count:]:  # only truly unread messages
                             try:
@@ -334,12 +340,16 @@ def run_watcher(daemon: bool = False):
                                 lines = [l for l in text.splitlines() if l.strip() and not l.strip().startswith("✓")]
                                 text = "\n".join(lines).strip()
                                 if not text:
+                                    log.info("[WA] Empty text after cleanup — skipping element.")
                                     continue
+
+                                log.info("[WA] Message text: '%s'", text[:100])
 
                                 # De-duplicate using chat + content fingerprint
                                 import hashlib
                                 msg_id = hashlib.md5(f"{chat_name}::{text[:120]}".encode()).hexdigest()[:12]
                                 if msg_id in seen_message_ids:
+                                    log.info("[WA] Already seen (id=%s) — skipping.", msg_id)
                                     continue
                                 seen_message_ids.add(msg_id)
                                 save_seen_ids(seen_message_ids)
@@ -355,9 +365,9 @@ def run_watcher(daemon: bool = False):
                                     log.info("Saved WhatsApp message -> %s", filename)
                                     count += 1
                                 else:
-                                    log.debug("Skipped (no keyword match): %s", text[:60])
+                                    log.info("[WA] Keyword not matched — keywords=%s | text='%s'", keywords, text[:80])
                             except Exception as e:
-                                log.debug("Error reading message: %s", e)
+                                log.warning("[WA] Error reading message element: %s", e)
                     except Exception as e:
                         log.debug("Error processing chat: %s", e)
 
