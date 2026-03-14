@@ -296,78 +296,113 @@ def run_watcher(daemon: bool = False):
                             log.warning("Skipping chat — could not resolve contact name (contact not saved?).")
                             continue
 
-                        log.info("[WA] Opened chat: '%s' | unread count: %d", chat_name, unread_count)
+                        log.info("[WA] Opened chat: '%s' | unread: %d", chat_name, unread_count)
 
-                        # Get last few messages — try multiple selectors
-                        msgs = []
-                        for sel in [
-                            '.message-in [data-testid="msg-container"]',
-                            '[data-testid="msg-container"]',
-                            'div.message-in',
-                            'div[class*="message-in"]',
+                        # Strategy: find the "Unread messages" divider WhatsApp inserts
+                        # in the conversation. All messages AFTER it are truly unread.
+                        # If the divider is not found, fall back to last unread_count messages.
+                        import hashlib
+
+                        def extract_text(el) -> str:
+                            """Extract clean message text from a message element."""
+                            text = ""
+                            for text_sel in ['span[dir="ltr"]', 'span[dir="rtl"]', '.copyable-text']:
+                                t = el.query_selector(text_sel)
+                                if t:
+                                    text = t.inner_text().strip()
+                                    if text:
+                                        break
+                            if not text:
+                                text = el.inner_text().strip()
+                            # Remove timestamp noise and tick marks
+                            lines = [l for l in text.splitlines()
+                                     if l.strip() and not l.strip().startswith("✓") and not l.strip().startswith("✗")]
+                            return "\n".join(lines).strip()
+
+                        def process_message(el) -> bool:
+                            """Process a single message element. Returns True if saved."""
+                            text = extract_text(el)
+                            if not text:
+                                return False
+                            log.info("[WA] Candidate message: '%s'", text[:100])
+                            msg_id = hashlib.md5(f"{chat_name}::{text[:120]}".encode()).hexdigest()[:12]
+                            if msg_id in seen_message_ids:
+                                log.info("[WA] Already seen (id=%s) — skip.", msg_id)
+                                return False
+                            seen_message_ids.add(msg_id)
+                            save_seen_ids(seen_message_ids)
+                            if message_matches(text, keywords):
+                                try:
+                                    pre_plain = el.get_attribute("data-pre-plain-text") or ""
+                                    sender = pre_plain.split("] ")[-1].rstrip(": ") if "] " in pre_plain else chat_name
+                                except Exception:
+                                    sender = chat_name
+                                filename, file_content = message_to_markdown(sender, chat_name, text)
+                                (INBOX_DIR / filename).write_text(file_content, encoding="utf-8")
+                                log.info("[WA] ✅ Saved -> %s", filename)
+                                return True
+                            else:
+                                log.info("[WA] No keyword match — keywords=%s | text='%s'", keywords, text[:80])
+                                return False
+
+                        # Try to find the "Unread messages" divider first
+                        unread_divider = None
+                        for div_sel in [
+                            '[data-testid="unread-notifications"]',
+                            'div[role="button"][aria-label*="nread"]',
+                            'div.focusable-list-item span',
                         ]:
-                            msgs = page.query_selector_all(sel)
-                            if msgs:
-                                log.info("[WA] Found %d message element(s) via: %s", len(msgs), sel)
+                            els = page.query_selector_all(div_sel)
+                            for el in els:
+                                txt = (el.inner_text() or "").lower()
+                                if "unread" in txt or "new message" in txt:
+                                    unread_divider = el
+                                    log.info("[WA] Found unread divider via: %s", div_sel)
+                                    break
+                            if unread_divider:
                                 break
 
-                        # Fallback: grab all copyable-text spans in the conversation
-                        if not msgs:
-                            msgs = page.query_selector_all('.copyable-text')
-                            log.info("[WA] Fallback: found %d copyable-text element(s)", len(msgs))
-
-                        if not msgs:
-                            log.warning("[WA] No message elements found in chat '%s' — selector may be outdated.", chat_name)
-
-                        for msg_el in msgs[-unread_count:]:  # only truly unread messages
+                        if unread_divider:
+                            # Get all incoming message elements after the divider
+                            all_msgs = page.query_selector_all('div.message-in, [data-testid="msg-container"]')
+                            # Use JavaScript to find elements that come after the divider in DOM order
                             try:
-                                # Extract text — try specific selectors then full inner text
-                                text = ""
-                                for text_sel in [
-                                    '.copyable-text',
-                                    'span[dir="ltr"]',
-                                    'span[dir="rtl"]',
-                                    '[data-testid="msg-meta"]',
-                                ]:
-                                    text_el = msg_el.query_selector(text_sel)
-                                    if text_el:
-                                        text = text_el.inner_text().strip()
-                                        if text:
-                                            break
-                                if not text:
-                                    text = msg_el.inner_text().strip()
-                                # Clean up timestamp noise (e.g. "10:30 AM\n\nHello")
-                                lines = [l for l in text.splitlines() if l.strip() and not l.strip().startswith("✓")]
-                                text = "\n".join(lines).strip()
-                                if not text:
-                                    log.info("[WA] Empty text after cleanup — skipping element.")
-                                    continue
-
-                                log.info("[WA] Message text: '%s'", text[:100])
-
-                                # De-duplicate using chat + content fingerprint
-                                import hashlib
-                                msg_id = hashlib.md5(f"{chat_name}::{text[:120]}".encode()).hexdigest()[:12]
-                                if msg_id in seen_message_ids:
-                                    log.info("[WA] Already seen (id=%s) — skipping.", msg_id)
-                                    continue
-                                seen_message_ids.add(msg_id)
-                                save_seen_ids(seen_message_ids)
-
-                                if message_matches(text, keywords):
+                                after_divider = page.evaluate("""(divider) => {
+                                    const all = Array.from(document.querySelectorAll('div.message-in, [data-testid="msg-container"]'));
+                                    let found = false;
+                                    return all.filter(el => {
+                                        if (!found) {
+                                            const pos = divider.compareDocumentPosition(el);
+                                            if (pos & Node.DOCUMENT_POSITION_FOLLOWING) found = true;
+                                        }
+                                        return found;
+                                    }).length;
+                                }""", unread_divider)
+                                log.info("[WA] Messages after unread divider: %d", after_divider)
+                                # Process last N messages (those after the divider)
+                                all_msgs = page.query_selector_all('div.message-in, [data-testid="msg-container"]')
+                                for msg_el in all_msgs[-max(after_divider, unread_count):]:
                                     try:
-                                        pre_plain = msg_el.get_attribute("data-pre-plain-text") or ""
-                                        sender = pre_plain.split("] ")[-1].rstrip(": ") if "] " in pre_plain else chat_name
-                                    except Exception:
-                                        sender = chat_name
-                                    filename, content = message_to_markdown(sender, chat_name, text)
-                                    (INBOX_DIR / filename).write_text(content, encoding="utf-8")
-                                    log.info("Saved WhatsApp message -> %s", filename)
-                                    count += 1
-                                else:
-                                    log.info("[WA] Keyword not matched — keywords=%s | text='%s'", keywords, text[:80])
+                                        if process_message(msg_el):
+                                            count += 1
+                                    except Exception as e:
+                                        log.warning("[WA] Message error: %s", e)
                             except Exception as e:
-                                log.warning("[WA] Error reading message element: %s", e)
+                                log.warning("[WA] Divider JS failed: %s — using count fallback", e)
+                                unread_divider = None  # fall through to count-based
+
+                        if not unread_divider:
+                            # Fallback: take last unread_count incoming messages
+                            msgs = page.query_selector_all('div.message-in')
+                            if not msgs:
+                                msgs = page.query_selector_all('[data-testid="msg-container"]')
+                            log.info("[WA] Count fallback: %d total msgs, reading last %d", len(msgs), unread_count)
+                            for msg_el in msgs[-unread_count:]:
+                                try:
+                                    if process_message(msg_el):
+                                        count += 1
+                                except Exception as e:
+                                    log.warning("[WA] Message error: %s", e)
                     except Exception as e:
                         log.debug("Error processing chat: %s", e)
 
