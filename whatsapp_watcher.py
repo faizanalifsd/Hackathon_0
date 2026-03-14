@@ -72,12 +72,14 @@ def send_whatsapp_message(chat_name: str, message: str, timeout: int = 90) -> bo
     return result[0]
 
 
+import io as _io
+_console = _io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.FileHandler(LOG_FILE, encoding="utf-8"),
-        logging.StreamHandler(sys.stdout),
+        logging.StreamHandler(_console),
     ],
 )
 log = logging.getLogger("whatsapp-watcher")
