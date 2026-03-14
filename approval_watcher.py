@@ -225,6 +225,27 @@ If no email needs to be sent, respond with exactly: NO_EMAIL"""
     return None
 
 
+def _get_original_task_sender(plan_name: str) -> str | None:
+    """
+    Read the `from:` frontmatter field from the original task file.
+    Returns the raw From header value (e.g. 'Name <email@x.com>') or None.
+    """
+    import re
+    task_name = plan_name.removeprefix("PLAN_")
+    for folder in ["Needs_Action", "Inbox", "Done"]:
+        task_path = VAULT_ROOT / folder / task_name
+        if task_path.exists():
+            for line in task_path.read_text(encoding="utf-8").splitlines():
+                if line.strip().lower().startswith("from:"):
+                    raw = line.split(":", 1)[1].strip()
+                    # Extract bare email address from "Name <email>" format
+                    match = re.search(r"<([^>]+)>", raw)
+                    if match:
+                        return match.group(1).strip()
+                    return raw.strip()
+    return None
+
+
 def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
     """
     Execute an approved plan — routes to WhatsApp reply or email based on source.
@@ -246,6 +267,16 @@ def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
             "No outgoing email found in plan.\n\n"
             "**Status: COMPLETE**"
         )
+
+    # Always override TO with the actual sender from the original task file
+    real_sender = _get_original_task_sender(plan_name)
+    if real_sender:
+        if fields["to"] != real_sender:
+            log.info("[Execute] Correcting TO: Groq said '%s' → using real sender '%s'",
+                     fields["to"], real_sender)
+        fields["to"] = real_sender
+    else:
+        log.warning("[Execute] Could not find original task file to verify sender — using Groq's TO: %s", fields["to"])
 
     log.info("[Execute] Sending to %s — %s", fields["to"], fields["subject"])
     try:
