@@ -209,7 +209,39 @@ def generate_plan(task_name: str, task_content: str) -> str | None:
     Auto-routes to Groq (short) or OpenRouter (long).
     Returns plan markdown string or None.
     """
-    system = """You are an AI Employee assistant. Generate a structured action plan for the given task.
+    is_whatsapp = "whatsapp" in task_name.lower() or "source: whatsapp" in task_content.lower()
+
+    if is_whatsapp:
+        system = """You are an AI Employee assistant. Generate a structured action plan for a WhatsApp message.
+Output ONLY the plan markdown — no explanations, no code fences.
+
+Use this EXACT format:
+
+---
+task: {task_name}
+approval_needed: yes
+priority: medium
+source: whatsapp
+---
+
+# Plan: <short title>
+
+## Summary
+<1-2 sentence summary of what the sender wants>
+
+## WhatsApp Reply
+<Write the exact reply message that will be sent to the sender. Keep it short, friendly, and direct. This is what will be sent — the user can edit it before approving.>
+
+---
+## Your Decision
+
+Read the reply above, edit it if needed, then check **one** box and save:
+
+- [ ] ✅ Approve — send the WhatsApp reply above to the sender now
+- [ ] ⏸ Pending Approval — hold for later review"""
+
+    else:
+        system = """You are an AI Employee assistant. Generate a structured action plan for the given task.
 Output ONLY the plan markdown — no explanations, no code fences.
 
 Use this EXACT format:

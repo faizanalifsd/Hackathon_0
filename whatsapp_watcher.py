@@ -221,7 +221,6 @@ def run_watcher(daemon: bool = False):
                     '[data-testid="icon-unread-count"]',
                     'span[data-testid="icon-unread-count"]',
                     '[aria-label*="unread"]',
-                    'span.x1c4vz4f',  # fallback class
                 ]:
                     unread_chats = page.query_selector_all(selector)
                     if unread_chats:
@@ -272,6 +271,12 @@ def run_watcher(daemon: bool = False):
                         time.sleep(1)
 
                         # Get chat name — try title attribute first (avoids "last seen" text)
+                        INVALID_NAMES = {"last seen", "online", "click here", "contact info", "unknown"}
+
+                        def is_valid_name(n: str) -> bool:
+                            n_lower = n.lower()
+                            return bool(n) and not any(bad in n_lower for bad in INVALID_NAMES)
+
                         chat_name = "Unknown"
                         for sel in [
                             '[data-testid="conversation-info-header-chat-title"]',
@@ -282,11 +287,14 @@ def run_watcher(daemon: bool = False):
                         ]:
                             el = page.query_selector(sel)
                             if el:
-                                # Prefer title attribute — it has the real name, not status text
                                 name = el.get_attribute("title") or el.inner_text().strip()
-                                if name and "last seen" not in name.lower() and "online" not in name.lower():
+                                if is_valid_name(name):
                                     chat_name = name
                                     break
+
+                        if chat_name == "Unknown":
+                            log.warning("Skipping chat — could not resolve contact name (contact not saved?).")
+                            continue
 
                         # Get last few messages — try multiple selectors
                         msgs = []
@@ -386,12 +394,13 @@ def run_watcher(daemon: bool = False):
 
                 search_box.click()
                 time.sleep(0.5)
-                # Clear then type
-                search_box.fill("")
-                search_box.type(chat_name, delay=50)
+                # Select all and delete, then type — fill() doesn't trigger WhatsApp events
+                page.keyboard.press("Control+a")
+                page.keyboard.press("Delete")
+                page.keyboard.type(chat_name, delay=50)
                 time.sleep(2.5)  # wait for search results
 
-                # 2. Click the matching chat row
+                # 2. Click the chat row that matches the exact chat name
                 clicked = False
                 for row_sel in [
                     '[data-testid="cell-frame-container"]',
@@ -399,13 +408,23 @@ def run_watcher(daemon: bool = False):
                     'div[tabindex="-1"]',
                 ]:
                     rows = page.query_selector_all(row_sel)
-                    if rows:
-                        rows[0].click()
-                        clicked = True
+                    for row in rows:
+                        try:
+                            # Check title spans inside the row for exact name match
+                            title_el = row.query_selector('span[title]') or row.query_selector('span[dir="auto"]')
+                            if title_el:
+                                name = title_el.get_attribute("title") or title_el.inner_text().strip()
+                                if chat_name.lower() in name.lower() or name.lower() in chat_name.lower():
+                                    row.click()
+                                    clicked = True
+                                    break
+                        except Exception:
+                            continue
+                    if clicked:
                         break
 
                 if not clicked:
-                    log.error("[WA] Could not find chat row for '%s'.", chat_name)
+                    log.error("[WA] Could not find exact chat row for '%s' — aborting to avoid wrong recipient.", chat_name)
                     return False
 
                 time.sleep(2)  # wait for chat to open fully
@@ -431,10 +450,11 @@ def run_watcher(daemon: bool = False):
 
                 compose_box.click()
                 time.sleep(0.3)
-                compose_box.fill(message)
+                # Use keyboard.type() not fill() — WhatsApp needs real keystroke events
+                page.keyboard.type(message, delay=30)
                 time.sleep(0.3)
                 page.keyboard.press("Enter")
-                time.sleep(1)
+                time.sleep(1.5)
                 log.info("[WA] ✅ Reply sent to '%s'", chat_name)
                 return True
 

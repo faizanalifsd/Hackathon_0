@@ -113,20 +113,26 @@ def _get_original_task_chat(plan_name: str) -> str | None:
     return None
 
 
-def _generate_whatsapp_reply(plan_content: str) -> str:
-    """Use Groq to generate a short WhatsApp reply message from the plan."""
-    try:
-        from router import route_completion
-        system = (
-            "You are a WhatsApp reply assistant. "
-            "Read the plan and write a short, friendly reply message to send to the sender via WhatsApp. "
-            "Output ONLY the message text — no labels, no formatting, no extra commentary."
-        )
-        result = route_completion(system, plan_content, force_model="groq")
-        return (result or "").strip()
-    except Exception as exc:
-        log.error("[WhatsApp] Reply generation failed: %s", exc)
-        return ""
+def _extract_reply_from_plan(plan_content: str) -> str:
+    """
+    Extract the exact reply message from the '## WhatsApp Reply' section of the plan.
+    The user may have edited this message before approving — use it as-is.
+    """
+    lines = plan_content.splitlines()
+    in_reply_section = False
+    reply_lines = []
+
+    for line in lines:
+        if line.strip() == "## WhatsApp Reply":
+            in_reply_section = True
+            continue
+        if in_reply_section:
+            # Stop at next section header or decision block
+            if line.startswith("##") or line.startswith("---"):
+                break
+            reply_lines.append(line)
+
+    return "\n".join(reply_lines).strip()
 
 
 def _execute_whatsapp_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
@@ -143,16 +149,16 @@ def _execute_whatsapp_plan(plan_name: str, plan_content: str) -> tuple[bool, str
 
     log.info("[Execute] WhatsApp plan — replying to chat: '%s'", chat_name)
 
-    # Step 2: Generate reply message via Groq
-    message = _generate_whatsapp_reply(plan_content)
+    # Step 2: Read the exact reply message the user approved (from ## WhatsApp Reply section)
+    message = _extract_reply_from_plan(plan_content)
     if not message:
         return False, (
             "## Execution Report\n\n"
-            "Groq could not generate a reply message.\n\n"
+            "No '## WhatsApp Reply' section found in plan.\n\n"
             "**Status: BLOCKED**"
         )
 
-    log.info("[Execute] Generated reply: %s", message[:80])
+    log.info("[Execute] Sending exact reply from plan: %s", message[:80])
 
     # Step 3: Send via WhatsApp
     success = _send_whatsapp_reply(chat_name, message)
