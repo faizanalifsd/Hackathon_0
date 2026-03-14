@@ -153,12 +153,16 @@ def email_to_markdown(msg: dict) -> tuple[str, str]:
     headers = payload.get("headers", [])
 
     subject = _header(headers, "Subject") or "No Subject"
-    sender = _header(headers, "From") or "Unknown"
+    sender_raw = _header(headers, "From") or "Unknown"
     date_str = _header(headers, "Date") or datetime.now().isoformat()
     body = _decode_body(payload)
 
-    # Safe filename: strip non-alphanumeric
+    # Extract bare email address from "Name <email@x.com>" format
     import re
+    email_match = re.search(r"<([^>]+@[^>]+)>", sender_raw)
+    sender_email = email_match.group(1).strip() if email_match else sender_raw.strip()
+
+    # Safe filename: strip non-alphanumeric
     safe_subject = re.sub(r"[^\w\s-]", "", subject).strip().replace(" ", "_")[:60]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"email_{timestamp}_{safe_subject}.md"
@@ -170,13 +174,14 @@ status: inbox
 priority: medium
 tags: []
 summary: ""
-from: {sender}
+from: {sender_email}
+from_name: {sender_raw}
 subject: {subject}
 ---
 
 # {subject}
 
-**From:** {sender}
+**From:** {sender_raw}
 **Date:** {date_str}
 
 ---

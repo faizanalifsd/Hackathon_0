@@ -142,6 +142,11 @@ def _triage_file(path: Path, vault: VaultIO):
         except Exception as exc:
             log.warning("[Triage] Claude error: %s", exc)
 
+    # If Claude CLI already moved the file out of Inbox, skip silently
+    if not path.exists():
+        log.info("[Triage] %s already moved by Claude CLI — skipping fallback.", path.name)
+        return
+
     # Fallback: classify via router then move to Needs_Action
     log.info("[Triage] Fallback: classifying %s via router → Needs_Action/", path.name)
     with ErrorRecovery("triage", f"Fallback triage of {path.name}"):
@@ -154,6 +159,10 @@ def _triage_file(path: Path, vault: VaultIO):
                      classification.get("priority"), classification.get("summary", "")[:60])
         except Exception as exc:
             log.warning("[Triage] Router classification failed: %s", exc)
+
+        if not path.exists():
+            log.info("[Triage] %s moved during classification — skipping.", path.name)
+            return
 
         vault.move_to_needs_action(
             str(rel),
