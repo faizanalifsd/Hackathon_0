@@ -181,47 +181,47 @@ def _execute_whatsapp_plan(plan_name: str, plan_content: str) -> tuple[bool, str
 
 def _extract_email_fields(plan_content: str) -> dict | None:
     """
-    Use Groq to extract email fields (to, subject, body) from an approved plan.
-    Returns dict or None if no email needs to be sent.
+    Extract email fields (to, subject, body) from the '## Email Reply' section of a plan.
+    The user may have edited this section before approving — use it as-is.
+    Returns dict or None if no email reply section found.
     """
-    from router import route_completion
-    system = """You are an email extraction assistant.
-Read the plan and extract the reply email to send.
-Respond in this EXACT format (no extra text):
+    lines = plan_content.splitlines()
+    in_section = False
+    section_lines = []
 
-TO: recipient@email.com
-SUBJECT: Subject line here
-BODY:
-Full email body here
-(can be multiple lines)
-END
+    for line in lines:
+        if line.strip() == "## Email Reply":
+            in_section = True
+            continue
+        if in_section:
+            if line.startswith("## ") or line.strip() == "---":
+                break
+            section_lines.append(line)
 
-If no email needs to be sent, respond with exactly: NO_EMAIL"""
-
-    result = route_completion(system, plan_content, force_model="groq")
-    if not result or "NO_EMAIL" in result:
+    if not section_lines:
         return None
 
     try:
         to = subject = ""
         body_lines = []
         in_body = False
-        for line in result.strip().splitlines():
-            if line.startswith("TO:"):
-                to = line.split(":", 1)[1].strip()
-            elif line.startswith("SUBJECT:"):
-                subject = line.split(":", 1)[1].strip()
-            elif line.startswith("BODY:"):
+        for line in section_lines:
+            stripped = line.strip()
+            if stripped.startswith("TO:"):
+                to = stripped.split(":", 1)[1].strip()
+            elif stripped.startswith("SUBJECT:"):
+                subject = stripped.split(":", 1)[1].strip()
+            elif stripped == "BODY:":
                 in_body = True
-            elif line.strip() == "END":
+            elif stripped == "END":
                 in_body = False
             elif in_body:
                 body_lines.append(line)
         body = "\n".join(body_lines).strip()
-        if to and subject and body:
+        if subject and body:
             return {"to": to, "subject": subject, "body": body}
     except Exception as exc:
-        log.error("Email extraction failed: %s", exc)
+        log.error("Email extraction from plan failed: %s", exc)
     return None
 
 
@@ -258,7 +258,7 @@ def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
     # Email path
     from gmail_mcp_server import send_email
 
-    log.info("[Execute] Extracting email via Groq...")
+    log.info("[Execute] Reading email reply from plan...")
     fields = _extract_email_fields(plan_content)
 
     if not fields:

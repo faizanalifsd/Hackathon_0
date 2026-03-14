@@ -241,7 +241,7 @@ Read the reply above, edit it if needed, then check **one** box and save:
 - [ ] ⏸ Pending Approval — hold for later review"""
 
     else:
-        system = """You are an AI Employee assistant. Generate a structured action plan for the given task.
+        system = """You are an AI Employee assistant. Generate a structured action plan with a ready-to-send email reply.
 Output ONLY the plan markdown — no explanations, no code fences.
 
 Use this EXACT format:
@@ -255,29 +255,24 @@ priority: medium
 # Plan: <short title>
 
 ## Summary
-<2-3 sentence summary>
+<2-3 sentence summary of what the email is about and what action is needed>
 
-## Steps
-1. <step>
-2. <step>
+## Email Reply
 
-## Actions Requiring Approval
-- <action that needs human sign-off, e.g. sending email>
-If none: _No approval-required actions._
-
-## Notes
-<any warnings or context>
+TO: <sender's email address extracted from the task content>
+SUBJECT: Re: <original subject>
+BODY:
+<Write the complete, ready-to-send reply email here. Be professional and concise.
+The user can edit this before approving — this exact text will be sent.>
+END
 
 ---
 ## Your Decision
 
-Review the plan above, make any changes you need, then check **one** box and save the file:
+Read the email reply above, edit it if needed, then check **one** box and save the file:
 
-- [ ] ✅ Approve — execute this plan now (Claude will send the reply email)
-- [ ] ⏸ Pending Approval — hold for later review
-
-Set approval_needed: yes if steps involve emails, social posts, payments, or external actions.
-Set approval_needed: no for purely internal/analysis tasks."""
+- [ ] ✅ Approve — send the email reply above now
+- [ ] ⏸ Pending Approval — hold for later review"""
 
     user = f"TASK FILE: {task_name}\n\nTASK CONTENT:\n{task_content}"
     return route_completion(system, user)
