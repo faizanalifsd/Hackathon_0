@@ -59,17 +59,17 @@ def install_tasks():
     social_tasks = [
         {
             "name": "AIEmployee_SocialFB_IG",
-            "description": "Tue/Thu 9 AM — Generate Facebook + Instagram post drafts",
-            "days": "TUE,THU",
+            "description": "Mon/Wed/Fri 9 AM — Generate Facebook + Instagram post drafts",
+            "days": "MON,WED,FRI",
             "time": "09:00",
             "command": str(UV),
             "args": f'{PYTHON_ARGS} python social_scheduler.py --facebook --instagram',
         },
         {
             "name": "AIEmployee_SocialLinkedIn",
-            "description": "Mon/Wed 8 AM — Generate LinkedIn post draft",
-            "days": "MON,WED",
-            "time": "08:00",
+            "description": "Mon/Wed/Fri 9 AM — Generate LinkedIn post draft",
+            "days": "MON,WED,FRI",
+            "time": "09:00",
             "command": str(UV),
             "args": f'{PYTHON_ARGS} python social_scheduler.py --linkedin',
         },
