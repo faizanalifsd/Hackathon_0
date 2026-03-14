@@ -445,7 +445,7 @@ def run_watcher(daemon: bool = False):
                 page.keyboard.type(chat_name, delay=50)
                 time.sleep(2.5)  # wait for search results
 
-                # 2. Click the chat row that matches the exact chat name
+                # 2. Click the chat row — EXACT name match only (no partial matches)
                 clicked = False
                 for row_sel in [
                     '[data-testid="cell-frame-container"]',
@@ -455,13 +455,14 @@ def run_watcher(daemon: bool = False):
                     rows = page.query_selector_all(row_sel)
                     for row in rows:
                         try:
-                            # Check title spans inside the row for exact name match
                             title_el = row.query_selector('span[title]') or row.query_selector('span[dir="auto"]')
                             if title_el:
-                                name = title_el.get_attribute("title") or title_el.inner_text().strip()
-                                if chat_name.lower() in name.lower() or name.lower() in chat_name.lower():
+                                name = (title_el.get_attribute("title") or title_el.inner_text()).strip()
+                                # EXACT match only — prevents sending to wrong contact
+                                if name.lower() == chat_name.lower():
                                     row.click()
                                     clicked = True
+                                    log.info("[WA] Exact match found: '%s' — clicking.", name)
                                     break
                         except Exception:
                             continue
@@ -469,10 +470,29 @@ def run_watcher(daemon: bool = False):
                         break
 
                 if not clicked:
-                    log.error("[WA] Could not find exact chat row for '%s' — aborting to avoid wrong recipient.", chat_name)
+                    log.error("[WA] No exact match for '%s' in search results — aborting send.", chat_name)
                     return False
 
                 time.sleep(2)  # wait for chat to open fully
+
+                # 3. Verify the correct chat is now open (header must match)
+                open_chat_name = ""
+                for sel in [
+                    '[data-testid="conversation-info-header-chat-title"]',
+                    'header span[title]',
+                    '#main header span[dir="auto"]',
+                ]:
+                    el = page.query_selector(sel)
+                    if el:
+                        open_chat_name = (el.get_attribute("title") or el.inner_text()).strip()
+                        if open_chat_name:
+                            break
+
+                if open_chat_name.lower() != chat_name.lower():
+                    log.error("[WA] Safety check FAILED — open chat is '%s', expected '%s'. Aborting.",
+                              open_chat_name, chat_name)
+                    return False
+                log.info("[WA] Safety check passed — chat '%s' is open.", open_chat_name)
 
                 # 3. Find and use the compose box
                 compose_box = None
