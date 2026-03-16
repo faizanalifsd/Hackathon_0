@@ -67,14 +67,17 @@ log = logging.getLogger("approval-watcher")
 
 
 def _detect_source(plan_name: str, plan_content: str) -> str:
-    """Return 'whatsapp' if the plan originated from a WhatsApp message, else 'email'."""
-    # Plan filename contains 'whatsapp' when it came from whatsapp_watcher
-    if "whatsapp" in plan_name.lower():
+    """Return 'whatsapp', 'linkedin', or 'email' based on plan origin."""
+    name_lower = plan_name.lower()
+    if "whatsapp" in name_lower:
         return "whatsapp"
-    # Fallback: check plan content for source field
+    if "linkedin" in name_lower:
+        return "linkedin"
     for line in plan_content.splitlines():
         if "source: whatsapp" in line.lower():
             return "whatsapp"
+        if "source: linkedin" in line.lower():
+            return "linkedin"
     return "email"
 
 
@@ -262,14 +265,89 @@ def _get_original_task_sender(plan_name: str) -> str | None:
     return None
 
 
+def _extract_linkedin_post_from_plan(plan_content: str) -> str:
+    """Extract the LinkedIn post text from the '## LinkedIn Post' section."""
+    lines = plan_content.splitlines()
+    in_section = False
+    post_lines = []
+    for line in lines:
+        if line.strip() == "## LinkedIn Post":
+            in_section = True
+            continue
+        if in_section:
+            if line.startswith("##") or line.startswith("---"):
+                break
+            post_lines.append(line)
+    return "\n".join(post_lines).strip()
+
+
+def _execute_linkedin_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
+    """Execute a LinkedIn plan — extract post text and publish."""
+    import requests
+    import os
+
+    post_text = _extract_linkedin_post_from_plan(plan_content)
+    if not post_text:
+        return False, (
+            "## Execution Report\n\n"
+            "No '## LinkedIn Post' section found in plan.\n\n"
+            "**Status: BLOCKED**"
+        )
+
+    log.info("[LinkedIn] Posting: %s...", post_text[:80])
+
+    try:
+        from linkedin_poster import _get_access_token, _get_person_urn, LINKEDIN_UGC_URL
+        token = _get_access_token()
+        person_urn = _get_person_urn(token)
+        payload = {
+            "author": person_urn,
+            "lifecycleState": "PUBLISHED",
+            "specificContent": {
+                "com.linkedin.ugc.ShareContent": {
+                    "shareCommentary": {"text": post_text},
+                    "shareMediaCategory": "NONE",
+                }
+            },
+            "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"},
+        }
+        r = requests.post(
+            LINKEDIN_UGC_URL,
+            json=payload,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+                "X-Restli-Protocol-Version": "2.0.0",
+            },
+        )
+        r.raise_for_status()
+        log.info("[LinkedIn] Post published successfully.")
+        return True, (
+            f"## Execution Report\n\n"
+            f"| Step | Result |\n|------|--------|\n"
+            f"| LinkedIn post published | Done |\n"
+            f"| Post preview | {post_text[:120]}... |\n\n"
+            f"**Status: COMPLETE**"
+        )
+    except Exception as exc:
+        log.error("[LinkedIn] Post failed: %s", exc)
+        return False, (
+            f"## Execution Report\n\n"
+            f"Failed to publish LinkedIn post: {exc}\n\n"
+            f"**Status: BLOCKED**"
+        )
+
+
 def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
     """
-    Execute an approved plan — routes to WhatsApp reply or email based on source.
+    Execute an approved plan — routes to WhatsApp, LinkedIn, or email based on source.
     Returns (success, report_markdown).
     """
     source = _detect_source(plan_name, plan_content)
     if source == "whatsapp":
         return _execute_whatsapp_plan(plan_name, plan_content)
+    if source == "linkedin":
+        return _execute_linkedin_plan(plan_name, plan_content)
 
     # Email path
     from gmail_mcp_server import send_email

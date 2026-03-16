@@ -380,77 +380,6 @@ class PlansHandler(FileSystemEventHandler):
 
 
 # ---------------------------------------------------------------------------
-# Step 4b: Pending_Approval watchdog → same checkbox detection as Plans/
-# ---------------------------------------------------------------------------
-
-def _check_pending_approval_decision(path: Path, vault: VaultIO):
-    """
-    Called when a Pending_Approval/ file is modified.
-    If user ticked [x] Approve → move to Approved/ (triggers execution).
-    """
-    try:
-        content = path.read_text(encoding="utf-8")
-    except Exception as exc:
-        log.error("[PendingApproval] Cannot read %s: %s", path.name, exc)
-        return
-
-    approved = (
-        "- [x] ✅ Approve" in content
-        or "- [X] ✅ Approve" in content
-        or "- [x] Approve" in content
-        or "- [X] Approve" in content
-    )
-
-    if approved:
-        try:
-            if not path.exists():
-                return
-            dest = vault.root / "Approved" / path.name
-            import shutil
-            shutil.move(str(path), str(dest))
-            log.info("[PendingApproval] %s → Approved/ ← executing now", path.name)
-            vault.log_action(
-                action_type="plan_approved_by_user", actor="user",
-                target=path.name, approval_status="approved", result="success",
-            )
-            vault.update_dashboard(
-                recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Approved by user: `{path.name}`"
-            )
-        except Exception as exc:
-            log.error("[PendingApproval] Failed to move %s to Approved: %s", path.name, exc)
-
-
-class PendingApprovalHandler(FileSystemEventHandler):
-    """Watch Pending_Approval/ for user checkbox ticks → route to Approved/."""
-
-    def __init__(self, vault: VaultIO):
-        self.vault = vault
-        self._debounce: dict = {}
-        self._lock = threading.Lock()
-
-    def _handle_modified(self, path: Path):
-        if not (path.suffix.lower() == ".md" and path.name.startswith("PLAN_")):
-            return
-        now = time.time()
-        with self._lock:
-            last = self._debounce.get(str(path), 0)
-            if now - last < 2.0:
-                return
-            self._debounce[str(path)] = now
-        threading.Thread(
-            target=_check_pending_approval_decision, args=(path, self.vault), daemon=True
-        ).start()
-
-    def on_modified(self, event):
-        if not event.is_directory:
-            self._handle_modified(Path(event.src_path))
-
-    def on_moved(self, event):
-        if not event.is_directory:
-            self._handle_modified(Path(event.dest_path))
-
-
-# ---------------------------------------------------------------------------
 # Step 5: Approved watchdog → execute plan → send email → Done
 # ---------------------------------------------------------------------------
 
@@ -525,10 +454,6 @@ def main(args=None):
     # Watch Plans/ → detect user checkbox tick → route to Approved/ or Pending_Approval/
     observer.schedule(PlansHandler(vault), str(vault.root / "Plans"), recursive=False)
     log.info("[Plans]      Watching Vault/Plans/ → routes on checkbox tick (✅ Approve / ⏸ Pending)")
-
-    # Watch Pending_Approval/ → detect checkbox tick → move to Approved/
-    observer.schedule(PendingApprovalHandler(vault), str(vault.root / "Pending_Approval"), recursive=False)
-    log.info("[PendingApproval] Watching Vault/Pending_Approval/ → routes on [x] Approve tick")
 
     # Watch Approved/ → execute
     observer.schedule(ApprovedHandler(vault), str(vault.root / "Approved"), recursive=False)

@@ -31,6 +31,8 @@ import argparse
 import json
 import logging
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import re
 import sys
 import webbrowser
@@ -52,7 +54,7 @@ LOG_FILE = BASE_DIR / "linkedin_poster.log"
 LINKEDIN_AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization"
 LINKEDIN_TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken"
 LINKEDIN_UGC_URL = "https://api.linkedin.com/v2/ugcPosts"
-LINKEDIN_ME_URL = "https://api.linkedin.com/v2/me"
+LINKEDIN_ME_URL = "https://api.linkedin.com/v2/userinfo"
 REDIRECT_URI = "http://localhost:8765/callback"
 SCOPES = "r_liteprofile w_member_social"
 
@@ -158,11 +160,17 @@ def run_oauth_flow():
 
 
 def _get_access_token() -> str:
-    if not TOKEN_FILE.exists():
-        log.error("No token found. Run: uv run python linkedin_poster.py --auth")
-        sys.exit(1)
-    data = json.loads(TOKEN_FILE.read_text(encoding="utf-8"))
-    return data["access_token"]
+    # 1. Try linkedin_token.json first
+    if TOKEN_FILE.exists():
+        data = json.loads(TOKEN_FILE.read_text(encoding="utf-8"))
+        return data["access_token"]
+    # 2. Fallback: LINKEDIN_ACCESS_TOKEN in .env
+    token = os.getenv("LINKEDIN_ACCESS_TOKEN")
+    if token:
+        log.info("Using LINKEDIN_ACCESS_TOKEN from .env")
+        return token
+    log.error("No token found. Set LINKEDIN_ACCESS_TOKEN in .env or run: uv run python linkedin_poster.py --auth")
+    sys.exit(1)
 
 
 def _get_person_urn(token: str) -> str:
@@ -174,7 +182,9 @@ def _get_person_urn(token: str) -> str:
         sys.exit(1)
     r = requests.get(LINKEDIN_ME_URL, headers={"Authorization": f"Bearer {token}"})
     r.raise_for_status()
-    member_id = r.json()["id"]
+    data = r.json()
+    # /v2/userinfo returns "sub", older /v2/me returns "id"
+    member_id = data.get("sub") or data.get("id")
     return f"urn:li:person:{member_id}"
 
 
@@ -216,8 +226,11 @@ CONTEXT:
 Output ONLY the post text, ready to copy-paste. No preamble.
 """
     try:
+        import shutil
+        claude_cmd = shutil.which("claude") or shutil.which("claude.cmd") or \
+            str(Path.home() / "AppData/Roaming/npm/claude.cmd")
         result = subprocess.run(
-            ["claude", "--print", prompt],
+            [claude_cmd, "--print", prompt],
             capture_output=True, text=True, timeout=60, cwd=str(BASE_DIR)
         )
         if result.returncode != 0 or not result.stdout.strip():
@@ -253,7 +266,7 @@ Review this post, then move this file to Vault/Approved/ to publish it.
 """
     dest = vault.pending_approval / filename
     dest.write_text(content, encoding="utf-8")
-    log.info("LinkedIn post draft → Pending_Approval/%s", filename)
+    log.info("LinkedIn post draft -> Pending_Approval/%s", filename)
 
     vault.log_action(
         action_type="linkedin_post_drafted",

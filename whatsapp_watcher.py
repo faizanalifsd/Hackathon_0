@@ -447,45 +447,71 @@ def run_watcher(daemon: bool = False):
                 page.keyboard.type(chat_name, delay=50)
                 time.sleep(2.5)  # wait for search results
 
-                # 2. Click the chat row — EXACT name match only (no partial matches)
+                # 2. Click the chat row — try exact match first, then startswith, then contains.
+                # The header safety check (step 3) ensures the correct chat actually opened.
                 clicked = False
-                for row_sel in [
-                    '[data-testid="cell-frame-container"]',
-                    '[role="listitem"]',
-                    'div[tabindex="-1"]',
-                    'li',
+                target = chat_name.lower()
+                for pass_name, match_fn in [
+                    ("exact",    lambda n: n.lower() == target),
+                    ("starts",   lambda n: n.lower().startswith(target) or target.startswith(n.lower())),
+                    ("contains", lambda n: target in n.lower() or n.lower() in target),
                 ]:
-                    rows = page.query_selector_all(row_sel)
-                    for row in rows:
-                        try:
-                            title_el = row.query_selector('span[title]') or row.query_selector('span[dir="auto"]')
-                            if title_el:
-                                name = (title_el.get_attribute("title") or title_el.inner_text()).strip()
-                                # EXACT match only — prevents sending to wrong contact
-                                if name.lower() == chat_name.lower():
-                                    row.click()
-                                    clicked = True
-                                    log.info("[WA] Exact match found: '%s' — clicking.", name)
-                                    break
-                        except Exception:
-                            continue
                     if clicked:
                         break
+                    for row_sel in [
+                        '[data-testid="cell-frame-container"]',
+                        '[role="listitem"]',
+                        'div[tabindex="-1"]',
+                        'li',
+                    ]:
+                        rows = page.query_selector_all(row_sel)
+                        for row in rows:
+                            try:
+                                title_el = (row.query_selector('span[title]')
+                                            or row.query_selector('span[dir="auto"]'))
+                                if title_el:
+                                    name = (title_el.get_attribute("title") or title_el.inner_text()).strip()
+                                    if match_fn(name):
+                                        row.click()
+                                        clicked = True
+                                        log.info("[WA] %s match: '%s' → clicking (target='%s').",
+                                                 pass_name, name, chat_name)
+                                        break
+                            except Exception:
+                                continue
+                        if clicked:
+                            break
 
                 if not clicked:
-                    log.error("[WA] No exact match for '%s' in search results — aborting send.", chat_name)
+                    log.error("[WA] No match for '%s' in search results — aborting send.", chat_name)
                     return False
 
-                time.sleep(2)  # wait for chat to open fully
+                # Wait for the compose box to appear — confirms the chat has opened.
+                # Use data-tab="10" to distinguish compose from search (data-tab="3").
+                # No #main scope needed — data-tab is unique enough.
+                compose_box = None
+                for compose_sel in [
+                    'div[contenteditable="true"][data-tab="10"]',
+                    'div[contenteditable="true"][spellcheck="true"]',
+                    'div[role="textbox"][data-tab="10"]',
+                    'footer div[contenteditable="true"]',
+                    'div[contenteditable="true"][class*="copyable"]',
+                ]:
+                    try:
+                        el = page.wait_for_selector(compose_sel, timeout=5000)
+                        if el:
+                            compose_box = el
+                            log.info("[WA] Compose box found via: %s", compose_sel)
+                            break
+                    except Exception:
+                        continue
 
-                # 3. Verify the correct chat is now open (header must match)
-                # Filter out subtitle lines like "click here for contact info", "last seen", etc.
+                if not compose_box:
+                    log.error("[WA] Could not find compose box — chat may not have opened.")
+                    return False
+
+                # Verify the correct chat is open (header check)
                 _INVALID = {"last seen", "online", "click here", "contact info", "unknown", "typing"}
-
-                def _valid_header(n: str) -> bool:
-                    n_l = n.lower()
-                    return bool(n) and not any(bad in n_l for bad in _INVALID)
-
                 open_chat_name = ""
                 for sel in [
                     '[data-testid="conversation-info-header-chat-title"]',
@@ -494,39 +520,22 @@ def run_watcher(daemon: bool = False):
                 ]:
                     for el in page.query_selector_all(sel):
                         candidate = (el.get_attribute("title") or el.inner_text()).strip()
-                        if _valid_header(candidate):
+                        n_l = candidate.lower()
+                        if candidate and not any(bad in n_l for bad in _INVALID):
                             open_chat_name = candidate
                             break
                     if open_chat_name:
                         break
 
-                if open_chat_name.lower() != chat_name.lower():
-                    log.error("[WA] Safety check FAILED — open chat is '%s', expected '%s'. Aborting.",
+                o, t = open_chat_name.lower(), chat_name.lower()
+                if o and t and (o not in t and t not in o):
+                    log.error("[WA] Safety check FAILED — open='%s' expected='%s'. Aborting.",
                               open_chat_name, chat_name)
                     return False
-                log.info("[WA] Safety check passed — chat '%s' is open.", open_chat_name)
-
-                # 3. Find and use the compose box
-                compose_box = None
-                for compose_sel in [
-                    'div[contenteditable="true"][data-tab="10"]',
-                    'div[contenteditable="true"][spellcheck="true"]',
-                    'div[role="textbox"][data-tab="10"]',
-                    'footer div[contenteditable="true"]',
-                    'div[contenteditable="true"][class*="copyable"]',
-                    'div[contenteditable="true"]',  # broad fallback
-                ]:
-                    el = page.query_selector(compose_sel)
-                    if el:
-                        compose_box = el
-                        break
-
-                if not compose_box:
-                    log.error("[WA] Could not find compose box to send reply.")
-                    return False
+                log.info("[WA] Safety check passed — open='%s' target='%s'.", open_chat_name, chat_name)
 
                 compose_box.click()
-                time.sleep(0.3)
+                time.sleep(0.5)
                 # Use keyboard.type() not fill() — WhatsApp needs real keystroke events
                 page.keyboard.type(message, delay=30)
                 time.sleep(0.3)

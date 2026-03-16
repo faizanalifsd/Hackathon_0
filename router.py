@@ -210,6 +210,60 @@ def generate_plan(task_name: str, task_content: str) -> str | None:
     Returns plan markdown string or None.
     """
     is_whatsapp = "whatsapp" in task_name.lower() or "source: whatsapp" in task_content.lower()
+    is_linkedin = "linkedin" in task_name.lower() or "source: linkedin" in task_content.lower()
+
+    if is_linkedin:
+        # Extract topic and tone from task content
+        topic = ""
+        tone = "professional"
+        for line in task_content.splitlines():
+            if line.strip().startswith("topic:"):
+                topic = line.split(":", 1)[1].strip()
+            if line.strip().startswith("tone:"):
+                tone = line.split(":", 1)[1].strip()
+
+        # Ask LLM for ONLY the post text — template is built in Python to guarantee correct format
+        system = (
+            "You are a LinkedIn content writer. Write a compelling LinkedIn post.\n"
+            "Output ONLY the post text — no headings, no markdown, no explanations.\n"
+            "Rules:\n"
+            "- Start with a strong hook (first line is critical)\n"
+            "- Use short paragraphs (1-2 lines each)\n"
+            "- Add 3-5 relevant hashtags at the end\n"
+            "- Keep it between 150-300 words\n"
+            f"- Tone: {tone}"
+        )
+        user = f"TOPIC: {topic}"
+        post_text = route_completion(system, user)
+        if not post_text:
+            return None
+
+        from datetime import datetime as _dt
+        now = _dt.now().strftime("%Y-%m-%d %H:%M")
+        return f"""---
+task: {task_name}
+approval_needed: yes
+priority: medium
+source: linkedin
+generated: {now}
+---
+
+# Plan: LinkedIn Post — {topic}
+
+## Summary
+LinkedIn post about "{topic}" in {tone} tone.
+
+## LinkedIn Post
+
+{post_text.strip()}
+
+---
+## Your Decision
+
+Read the post above, edit it if needed, then check **one** box and save:
+
+- [ ] ✅ Approve — post this to LinkedIn now
+- [ ] ⏸ Pending Approval — hold for later review"""
 
     if is_whatsapp:
         system = """You are an AI Employee assistant. Generate a structured action plan for a WhatsApp message.
