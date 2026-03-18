@@ -1,0 +1,110 @@
+[
+  {
+    "timestamp": "2026-03-17T11:22:49.129655",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260317_112040_MySQL_Database_Basic_Concepts.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260317_112040_MySQL_Database_Basic_Concepts.md"
+  },
+  {
+    "timestamp": "2026-03-17T11:24:01.916614",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260317_112228_Zeeshan_Bro_45b532.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260317_112228_Zeeshan_Bro_45b532.md"
+  },
+  {
+    "timestamp": "2026-03-17T11:24:40.789702",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260317_112228_Zeeshan_Bro_45b532.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-17T11:25:14.388871",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260317_112228_Zeeshan_Bro_45b532.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Bro' | Sent |\n| Message | Hi Zeeshan, I've made a note of our meeting at 3 pm today. Can you please share the agenda or any sp |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-17T11:28:29.643482",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260317_112040_MySQL_Database_Basic_Concepts.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-17T11:28:40.133381",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260317_112040_MySQL_Database_Basic_Concepts.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| LinkedIn post published | Done |\n| Post preview | # MySQL Database Basic Concepts\n\nAre you ready to unlock the power of data management with MySQL, one of the most widely... |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-17T11:37:10.528375",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260317_113528_Zeeshan_Bro_c91e3a.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260317_113528_Zeeshan_Bro_c91e3a.md"
+  },
+  {
+    "timestamp": "2026-03-17T11:37:25.338219",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260317_113528_Zeeshan_Bro_c91e3a.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-17T11:37:42.671109",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260317_113528_Zeeshan_Bro_c91e3a.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Bro' | Sent |\n| Message | Hi Zeeshan Bro, we are looking into the payment status and will get back to you with an update soon. |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-17T11:56:21.074167",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260317_115421_Claude_Code_Basics.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260317_115421_Claude_Code_Basics.md"
+  },
+  {
+    "timestamp": "2026-03-17T11:56:38.232547",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260317_115421_Claude_Code_Basics.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-17T11:56:43.178836",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260317_115421_Claude_Code_Basics.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| LinkedIn post published | Done |\n| Post preview | Are you ready to unlock the full potential of AI-powered coding with Claude Code Basics, a game-changing tool that's rev... |\n\n**Status: COMPLETE**"
+  }
+]

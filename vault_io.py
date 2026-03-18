@@ -15,7 +15,7 @@ import json
 import os
 import re
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 VAULT_ROOT = Path(__file__).parent / "Vault"
@@ -27,8 +27,15 @@ PENDING_APPROVAL = VAULT_ROOT / "Pending_Approval"
 APPROVED = VAULT_ROOT / "Approved"
 DONE = VAULT_ROOT / "Done"
 LOGS = VAULT_ROOT / "Logs"
+BRIEFINGS = VAULT_ROOT / "Briefings"
+REPORTS = VAULT_ROOT / "Reports"
+QUEUE = VAULT_ROOT / "Queue"
+ERRORS = VAULT_ROOT / "Errors"
 DASHBOARD = VAULT_ROOT / "Dashboard.md"
 HANDBOOK = VAULT_ROOT / "Company_Handbook.md"
+
+LOG_RETENTION_DAYS = 90
+LOG_COMPRESS_AFTER_DAYS = 30
 
 
 # ---------------------------------------------------------------------------
@@ -84,10 +91,16 @@ class VaultIO:
         self.logs = self.root / "Logs"
         self.dashboard = self.root / "Dashboard.md"
 
-        # Ensure all Silver Tier folders exist
+        self.briefings = self.root / "Briefings"
+        self.reports = self.root / "Reports"
+        self.queue = self.root / "Queue"
+        self.errors = self.root / "Errors"
+
+        # Ensure all folders exist
         for folder in [
             self.inbox, self.needs_action, self.plans,
             self.pending_approval, self.approved, self.done, self.logs,
+            self.briefings, self.reports, self.queue, self.errors,
         ]:
             folder.mkdir(parents=True, exist_ok=True)
 
@@ -309,6 +322,59 @@ class VaultIO:
             f"inbox:{inbox_count} needs_action:{na_count} "
             f"plans:{plans_count} pending:{pending_count} done:{done_count}"
         )
+
+
+# ------------------------------------------------------------------
+# Error quarantine
+# ------------------------------------------------------------------
+
+    def quarantine_file(self, rel_path: str, reason: str) -> Path:
+        """Move a corrupted/bad file to Vault/Errors/ with reason in filename."""
+        src = self.root / rel_path
+        safe_reason = reason[:40].replace(" ", "_").replace("/", "-")
+        dest = self.errors / f"ERROR_{safe_reason}_{src.name}"
+        shutil.move(str(src), str(dest))
+        return dest
+
+    # ------------------------------------------------------------------
+    # Log retention & compression
+    # ------------------------------------------------------------------
+
+    def maintain_logs(self) -> dict:
+        """
+        Compress logs older than LOG_COMPRESS_AFTER_DAYS into a monthly .json.gz
+        and delete compressed source files older than LOG_RETENTION_DAYS.
+        Returns summary dict.
+        """
+        import gzip
+        now = datetime.now()
+        compress_cutoff = now - timedelta(days=LOG_COMPRESS_AFTER_DAYS)
+        delete_cutoff = now - timedelta(days=LOG_RETENTION_DAYS)
+
+        compressed = 0
+        deleted = 0
+
+        for log_file in sorted(self.logs.glob("????-??-??.json")):
+            try:
+                file_date = datetime.strptime(log_file.stem, "%Y-%m-%d")
+            except ValueError:
+                continue
+
+            if file_date < delete_cutoff:
+                # Check if a compressed version exists before deleting raw
+                gz_path = log_file.with_suffix(".json.gz")
+                if gz_path.exists():
+                    log_file.unlink()
+                    deleted += 1
+            elif file_date < compress_cutoff:
+                gz_path = log_file.with_suffix(".json.gz")
+                if not gz_path.exists():
+                    with open(log_file, "rb") as f_in, gzip.open(gz_path, "wb") as f_out:
+                        f_out.write(f_in.read())
+                    log_file.unlink()
+                    compressed += 1
+
+        return {"compressed": compressed, "deleted": deleted}
 
 
 # ---------------------------------------------------------------------------

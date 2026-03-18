@@ -255,6 +255,8 @@ LinkedIn post about "{topic}" in {tone} tone.
 
 ## LinkedIn Post
 
+# {topic}
+
 {post_text.strip()}
 
 ---

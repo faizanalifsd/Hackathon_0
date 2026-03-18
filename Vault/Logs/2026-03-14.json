@@ -1,0 +1,146 @@
+[
+  {
+    "timestamp": "2026-03-14T14:23:38.984482",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260314_142125_tell_me_your_favourite_food_name.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260314_142125_tell_me_your_favourite_food_name.md"
+  },
+  {
+    "timestamp": "2026-03-14T14:25:08.177567",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_email_20260314_142125_tell_me_your_favourite_food_name.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-14T14:25:12.012973",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260314_142125_tell_me_your_favourite_food_name.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to faizan.ali@email.com | Sent (ID: `19ceba9ff62aa2fe`) |\n| Subject | Re: Favorite Food |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-14T14:44:02.708696",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260314_144130_For_iftar_party.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260314_144130_For_iftar_party.md"
+  },
+  {
+    "timestamp": "2026-03-14T14:44:57.183993",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "ERROR_triage_20260314_144455.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_ERROR_triage_20260314_144455.md"
+  },
+  {
+    "timestamp": "2026-03-14T14:52:06.981964",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_email_20260314_144130_For_iftar_party.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-14T14:52:09.672124",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260314_144130_For_iftar_party.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to zeeshanali@email.com | Sent (ID: `19cebc2ac1562319`) |\n| Subject | Re: For iftar party |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-14T15:18:42.578313",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260314_151600_Zeeshan_Jutt_51df29.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260314_151600_Zeeshan_Jutt_51df29.md"
+  },
+  {
+    "timestamp": "2026-03-14T15:19:10.929265",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260314_151600_Zeeshan_Jutt_51df29.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-14T15:19:53.676731",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260314_151600_Zeeshan_Jutt_51df29.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Jutt' | Sent |\n| Message | Hi Zeeshan, we have received your request to confirm order invoice 1235498. We are checking on the s |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-14T15:25:46.784589",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260314_151600_Zeeshan_Jutt_51df29.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Jutt' | Sent |\n| Message | Hi Zeeshan, we have received your request to confirm order invoice 1235498. We are checking on the s |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-14T15:26:51.949192",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260314_151600_Zeeshan_Jutt_51df29.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Jutt'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-14T15:35:02.541334",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260314_151600_Zeeshan_Jutt_51df29.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Jutt'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-14T15:47:24.366459",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260314_154558_Mama_G_4c4caa.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260314_154558_Mama_G_4c4caa.md"
+  },
+  {
+    "timestamp": "2026-03-14T15:48:00.904896",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260314_154558_Mama_G_4c4caa.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-14T15:48:41.711408",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260314_154558_Mama_G_4c4caa.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Mama G' | Sent |\n| Message | Hi Mama G, I'm checking my schedule. Can you please suggest a few time slots that work for you?... |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  }
+]

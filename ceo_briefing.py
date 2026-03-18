@@ -260,11 +260,43 @@ def main():
                         help="Generate briefing and print it without sending email")
     args = parser.parse_args()
 
+    # Generate weekly social media report first (included in briefing data)
+    try:
+        from social_scheduler import generate_weekly_social_report
+        report_path = generate_weekly_social_report()
+        log.info("Weekly social report generated: %s", report_path)
+    except Exception as exc:
+        log.warning("Social report generation failed (non-fatal): %s", exc)
+
     log.info("Collecting weekly vault data...")
     data = collect_weekly_data()
 
     log.info("Generating briefing with AI router...")
     briefing_text = generate_briefing_text(data)
+
+    # Save briefing to Vault/Briefings/
+    try:
+        briefing_dir = VAULT_ROOT / "Briefings"
+        briefing_dir.mkdir(parents=True, exist_ok=True)
+        monday = (datetime.now() + __import__("datetime").timedelta(days=(7 - datetime.now().weekday()) % 7)).strftime("%Y-%m-%d")
+        briefing_file = briefing_dir / f"{monday}_Monday_CEO_Briefing.md"
+        briefing_file.write_text(
+            f"---\ntype: ceo_briefing\nweek_ending: {data['week_end']}\ngenerated: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n---\n\n# Monday Morning CEO Briefing\n\n{briefing_text}\n",
+            encoding="utf-8",
+        )
+        log.info("Briefing saved: Vault/Briefings/%s", briefing_file.name)
+    except Exception as exc:
+        log.warning("Failed to save briefing to Vault/Briefings/: %s", exc)
+
+    # Maintain log retention (compress old logs)
+    try:
+        from vault_io import VaultIO
+        vault = VaultIO()
+        result = vault.maintain_logs()
+        if result["compressed"] or result["deleted"]:
+            log.info("Log maintenance: compressed=%d deleted=%d", result["compressed"], result["deleted"])
+    except Exception as exc:
+        log.warning("Log maintenance failed (non-fatal): %s", exc)
 
     success = send_ceo_briefing(briefing_text, data, dry_run=args.dry_run)
     if success:

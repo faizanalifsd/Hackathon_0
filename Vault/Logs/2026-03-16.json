@@ -1,0 +1,110 @@
+[
+  {
+    "timestamp": "2026-03-16T11:45:28.594892",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "LINKEDIN_POST_20260316.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-16T11:46:09.312844",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260316_114458_Alibaba_Cloud.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260316_114458_Alibaba_Cloud.md"
+  },
+  {
+    "timestamp": "2026-03-16T11:46:37.282189",
+    "action_type": "linkedin_post_published",
+    "actor": "linkedin_poster",
+    "target": "LINKEDIN_POST_20260316.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-16T11:46:37.299189",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "LINKEDIN_POST_20260316.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-16T11:53:24.420522",
+    "action_type": "linkedin_post_drafted",
+    "actor": "linkedin_poster",
+    "target": "LINKEDIN_POST_20260316_115324.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-16T12:20:29.770489",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260316_121907_Enjoying_Rain.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260316_121907_Enjoying_Rain.md"
+  },
+  {
+    "timestamp": "2026-03-16T12:21:38.195016",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260316_121907_Enjoying_Rain.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-16T12:21:39.235779",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260316_121907_Enjoying_Rain.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nNo '## LinkedIn Post' section found in plan.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-16T12:29:48.591945",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260316_122741_Enjoying_Rain.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260316_122741_Enjoying_Rain.md"
+  },
+  {
+    "timestamp": "2026-03-16T12:45:35.024269",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260316_124349_AI_Revolution.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260316_124349_AI_Revolution.md"
+  },
+  {
+    "timestamp": "2026-03-16T12:46:10.503978",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260316_124349_AI_Revolution.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-16T12:46:11.510770",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260316_124349_AI_Revolution.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nNo '## LinkedIn Post' section found in plan.\n\n**Status: BLOCKED**"
+  }
+]

@@ -20,9 +20,10 @@ Move to Vault/Approved/ to publish.
 """
 
 import argparse
+import json
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
@@ -83,17 +84,122 @@ def generate_linkedin_draft(context: str = "") -> str | None:
     return None
 
 
+def generate_weekly_social_report() -> str:
+    """
+    Scan Vault/Done/ and Vault/Logs/ for the past 7 days of social media activity.
+    Write a report to Vault/Reports/Social_Media_Weekly_YYYY-MM-DD.md.
+    Returns the report file path.
+    """
+    from vault_io import VaultIO
+    from router import route_completion
+
+    vault = VaultIO()
+    cutoff = datetime.now() - timedelta(days=7)
+    week_end = datetime.now().strftime("%Y-%m-%d")
+
+    # Count published posts per platform from Done/
+    platform_counts: dict[str, int] = {"linkedin": 0, "facebook": 0, "instagram": 0}
+    for f in vault.done.glob("*.md"):
+        mtime = datetime.fromtimestamp(f.stat().st_mtime)
+        if mtime < cutoff:
+            continue
+        name_lower = f.name.lower()
+        for platform in platform_counts:
+            if name_lower.startswith(platform) or f"_{platform}_" in name_lower:
+                platform_counts[platform] += 1
+
+    # Read log entries for social actions
+    social_log_lines: list[str] = []
+    for log_file in vault.logs.glob("????-??-??.json"):
+        try:
+            file_date = datetime.strptime(log_file.stem, "%Y-%m-%d")
+        except ValueError:
+            continue
+        if file_date < cutoff:
+            continue
+        try:
+            entries = json.loads(log_file.read_text(encoding="utf-8"))
+            for entry in entries:
+                target = entry.get("target", "").lower()
+                action = entry.get("action_type", "").lower()
+                if any(p in target or p in action for p in ("linkedin", "facebook", "instagram", "post")):
+                    social_log_lines.append(
+                        f"- {entry.get('timestamp', '')[:16]} | {entry.get('action_type')} | "
+                        f"{entry.get('target')} | {entry.get('result')}"
+                    )
+        except Exception:
+            pass
+
+    log_summary = "\n".join(social_log_lines[-30:]) if social_log_lines else "_No social media log entries this week._"
+
+    # AI-generated summary
+    system = (
+        "You are a social media analyst writing a weekly performance summary for a business owner. "
+        "Be concise and professional. Use bullet points. Max 200 words."
+    )
+    user = f"""Weekly Social Media Activity ({(datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')} to {week_end}):
+
+Posts published:
+- LinkedIn: {platform_counts['linkedin']}
+- Facebook: {platform_counts['facebook']}
+- Instagram: {platform_counts['instagram']}
+
+Activity log:
+{log_summary}
+
+Write a weekly social media performance summary including: total posts, platform breakdown, observations, and 1-2 recommendations for next week."""
+
+    ai_summary = route_completion(system, user) or "_AI summary unavailable — check LLM API keys._"
+
+    report_content = f"""---
+type: social_media_report
+week_ending: {week_end}
+generated: {datetime.now().strftime("%Y-%m-%d %H:%M")}
+---
+
+# Social Media Weekly Report — {week_end}
+
+## Posts Published This Week
+
+| Platform | Posts |
+|----------|-------|
+| LinkedIn | {platform_counts['linkedin']} |
+| Facebook | {platform_counts['facebook']} |
+| Instagram | {platform_counts['instagram']} |
+| **Total** | **{sum(platform_counts.values())}** |
+
+## AI Summary
+
+{ai_summary}
+
+## Activity Log
+
+{log_summary}
+"""
+
+    report_path = vault.reports / f"Social_Media_Weekly_{week_end}.md"
+    report_path.write_text(report_content, encoding="utf-8")
+    log.info("[Social Report] Saved: Vault/Reports/Social_Media_Weekly_%s.md", week_end)
+    return str(report_path)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Social Media Post Scheduler")
     parser.add_argument("--facebook",  action="store_true", help="Generate Facebook post draft")
     parser.add_argument("--instagram", action="store_true", help="Generate Instagram post draft")
     parser.add_argument("--linkedin",  action="store_true", help="Generate LinkedIn post draft")
     parser.add_argument("--all",       action="store_true", help="Generate all platform drafts")
+    parser.add_argument("--report",    action="store_true", help="Generate weekly social media report")
     parser.add_argument("--topic",     default="",          help="Optional topic for the post")
     args = parser.parse_args()
 
-    if not any([args.facebook, args.instagram, args.linkedin, args.all]):
+    if not any([args.facebook, args.instagram, args.linkedin, args.all, args.report]):
         parser.print_help()
+        sys.exit(0)
+
+    if args.report:
+        path = generate_weekly_social_report()
+        print(f"\nWeekly social media report saved: {path}\n")
         sys.exit(0)
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M")

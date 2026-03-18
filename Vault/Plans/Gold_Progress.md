@@ -86,9 +86,32 @@ updated: 2026-03-14
 
 ---
 
-## Feature 6: Comprehensive Audit Logging — PARTIAL
+## Feature 6: Comprehensive Audit Logging ✅ COMPLETE (2026-03-18)
 
-**Status:** Partial — `vault_io.py` `log_action()` already writes to `Vault/Logs/`
-- Weekly summary now included in CEO Briefing (Feature 4)
+**Status:** Done
+
+**What was built / fixed:**
+- `vault_io.py` `log_action()` writes to `Vault/Logs/YYYY-MM-DD.json` (existing)
+- `vault_io.maintain_logs()` — compresses logs >30 days old to `.json.gz`, deletes compressed logs >90 days old
+- Weekly log summary included in CEO Briefing (Feature 4)
+- Log maintenance runs automatically every Sunday when `ceo_briefing.py` executes
+
+---
+
+## Gap Fixes (2026-03-18)
+
+**Missing folders created:**
+- `Vault/Briefings/` — CEO briefings saved here as `YYYY-MM-DD_Monday_CEO_Briefing.md`
+- `Vault/Reports/` — Weekly social media reports saved here
+- `Vault/Queue/` — Email retry queue for Gmail API failures
+- `Vault/Errors/` — Quarantine folder for corrupted/bad files
+
+**Social media weekly report:**
+- `social_scheduler.py --report` — generates `Vault/Reports/Social_Media_Weekly_YYYY-MM-DD.md`
+- Auto-triggered every Sunday by `ceo_briefing.py` before generating the CEO briefing
+
+**Log retention:**
+- `vault_io.VaultIO.maintain_logs()` — 30-day compress, 90-day delete cycle
+- `vault_io.VaultIO.quarantine_file()` — moves bad files to `Vault/Errors/` with reason in filename
 
 ---

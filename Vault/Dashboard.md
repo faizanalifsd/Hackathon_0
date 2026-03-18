@@ -1,35 +1,25 @@
 # Dashboard
 
-> Last updated: 2026-03-12 11:40
+> Last updated: 2026-03-17 11:56
 
 ## Status Overview
 
 | Folder | Count |
 |--------|-------|
 | Inbox | 0 |
-| Needs Action | 7 |
-| Plans | 4 |
-| Pending Approval | 1 |
+| Needs Action | 1 |
+| Plans | 2 |
+| Pending Approval | 0 |
 | Approved (awaiting execution) | 0 |
-| Done | 25 |
+| Done | 28 |
 
 ## Recent Activity
 
-- 2026-03-12 11:40 — Executed approved plan: `PLAN_whatsapp_20260312_113252_Zeeshan_Bro_2c88b7.md` -> success
+- 2026-03-17 11:56 — Executed approved plan: `PLAN_linkedin_20260317_115421_Claude_Code_Basics.md` -> success
 
 ## Pending Items
 
-- [[Needs_Action/whatsapp_20260312_104440_Zeeshan_Bro_37e60b.md]]
-- [[Needs_Action/whatsapp_20260312_104440_Zeeshan_Bro_9dbf15.md]]
-- [[Needs_Action/whatsapp_20260312_111301_last_seen_today_at_1112_AM_2c88b7.md]]
-- [[Needs_Action/whatsapp_20260312_113252_Zeeshan_Bro_37e60b.md]]
-- [[Needs_Action/whatsapp_20260312_113252_Zeeshan_Bro_9dbf15.md]]
-- [[Needs_Action/whatsapp_20260312_113252_Zeeshan_Bro_b5190d.md]]
-- [[Needs_Action/whatsapp_20260312_113252_Zeeshan_Bro_d22a1c.md]]
-
-## Awaiting Your Approval
-
-- [[Pending_Approval/PLAN_whatsapp_20260312_111301_last_seen_today_at_1112_AM_2c88b7.md]]
+- [[Needs_Action/email_20260316_114458_Alibaba_Cloud.md]]
 
 ## Quick Links
 
