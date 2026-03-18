@@ -29,14 +29,6 @@ APPROX_CHARS_PER_TOKEN = 4            # rough estimate
 
 GROQ_MODEL = "llama-3.3-70b-versatile"
 OPENROUTER_MODEL = "google/gemini-flash-1.5"
-CLAUDE_MODEL = "claude-sonnet-4-6"
-
-# Keywords that indicate a complex/sensitive task → route to Claude
-COMPLEX_TASK_KEYWORDS = [
-    "legal", "contract", "financial", "sensitive", "confidential",
-    "urgent", "critical", "privacy", "medical", "compliance",
-    "lawsuit", "dispute", "security", "breach", "penalty",
-]
 
 BASE_DIR = Path(__file__).parent
 
@@ -129,39 +121,6 @@ def _call_openrouter(system: str, user: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# Claude API (complex / high-stakes / final fallback)
-# ---------------------------------------------------------------------------
-
-def _call_claude(system: str, user: str) -> str | None:
-    api_key = os.getenv("ANTHROPIC_API_KEY", "")
-    if not api_key:
-        log.warning("[Router] ANTHROPIC_API_KEY not set — skipping Claude")
-        return None
-    try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=api_key)
-        message = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=2000,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-        )
-        return message.content[0].text.strip()
-    except ImportError:
-        log.warning("[Router] anthropic package not installed — run: uv add anthropic")
-        return None
-    except Exception as exc:
-        log.error("[Router] Claude error: %s", exc)
-        return None
-
-
-def _is_complex_task(text: str) -> bool:
-    """Return True if any complexity/sensitivity keyword is found."""
-    tl = text.lower()
-    return any(kw in tl for kw in COMPLEX_TASK_KEYWORDS)
-
-
-# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -169,56 +128,34 @@ def route_completion(system: str, user: str, force_model: str = "auto") -> str |
     """
     Route a completion request to the right model.
 
-    force_model: "groq" | "openrouter" | "claude" | "auto" (default)
-    Cascade: Groq → OpenRouter → Claude (final fallback)
-    Complex/sensitive tasks in auto mode are routed to Claude first.
-    Returns the model response string, or None on all failure.
+    force_model: "groq" | "openrouter" | "auto" (default)
+    Returns the model response string, or None on failure.
     """
-    result = None
-    model_name = "unknown"
-
     if force_model == "groq":
         model_name = f"Groq/{GROQ_MODEL}"
         result = _call_groq(system, user)
     elif force_model == "openrouter":
         model_name = f"OpenRouter/{OPENROUTER_MODEL}"
         result = _call_openrouter(system, user)
-    elif force_model == "claude":
-        model_name = f"Claude/{CLAUDE_MODEL}"
-        result = _call_claude(system, user)
     else:
+        # Auto-route based on content length
         content = user + system
-        # Complex/sensitive task → try Claude first
-        if _is_complex_task(content):
-            model_name = f"Claude/{CLAUDE_MODEL}"
-            log.info("[Router] Complex task detected → %s", model_name)
-            result = _call_claude(system, user)
+        if _is_long_context(content):
+            model_name = f"OpenRouter/{OPENROUTER_MODEL}"
+            log.info("[Router] Long context (%d tokens) → %s", _estimate_tokens(content), model_name)
+            result = _call_openrouter(system, user)
             if result is None:
-                log.warning("[Router] Claude failed — falling back to Groq")
-
-        if result is None:
-            if _is_long_context(content):
-                model_name = f"OpenRouter/{OPENROUTER_MODEL}"
-                log.info("[Router] Long context (%d tokens) → %s", _estimate_tokens(content), model_name)
-                result = _call_openrouter(system, user)
-                if result is None:
-                    log.warning("[Router] OpenRouter failed — falling back to Groq")
-                    model_name = f"Groq/{GROQ_MODEL}"
-                    result = _call_groq(system, user)
-            else:
+                log.warning("[Router] OpenRouter failed — falling back to Groq")
                 model_name = f"Groq/{GROQ_MODEL}"
-                log.info("[Router] Short context (%d tokens) → %s", _estimate_tokens(content), model_name)
                 result = _call_groq(system, user)
-                if result is None:
-                    log.warning("[Router] Groq failed — falling back to OpenRouter")
-                    model_name = f"OpenRouter/{OPENROUTER_MODEL}"
-                    result = _call_openrouter(system, user)
-
-        # Final fallback: Claude
-        if result is None:
-            log.warning("[Router] All primary models failed — final fallback to Claude")
-            model_name = f"Claude/{CLAUDE_MODEL}"
-            result = _call_claude(system, user)
+        else:
+            model_name = f"Groq/{GROQ_MODEL}"
+            log.info("[Router] Short context (%d tokens) → %s", _estimate_tokens(content), model_name)
+            result = _call_groq(system, user)
+            if result is None:
+                log.warning("[Router] Groq failed — falling back to OpenRouter")
+                model_name = f"OpenRouter/{OPENROUTER_MODEL}"
+                result = _call_openrouter(system, user)
 
     if result:
         log.info("[Router] Response from %s (%d chars)", model_name, len(result))
@@ -394,6 +331,4 @@ Read the email reply above, edit it if needed, then check **one** box and save t
 - [ ] ⏸ Pending Approval — hold for later review"""
 
     user = f"TASK FILE: {task_name}\n\nTASK CONTENT:\n{task_content}"
-    # High-priority or complex tasks get Claude
-    force = "claude" if "priority: high" in task_content.lower() else "auto"
-    return route_completion(system, user, force_model=force)
+    return route_completion(system, user)

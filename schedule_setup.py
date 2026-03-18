@@ -81,22 +81,6 @@ def install_tasks():
             "command": str(UV),
             "args": f'{PYTHON_ARGS} python ceo_briefing.py',
         },
-        {
-            "name": "AIEmployee_CalendarAgenda",
-            "description": "Daily 7 AM — Send today's Google Calendar agenda email",
-            "days": "MON,TUE,WED,THU,FRI,SAT,SUN",
-            "time": "07:00",
-            "command": str(UV),
-            "args": f'{PYTHON_ARGS} python calendar_assistant.py --agenda',
-        },
-        {
-            "name": "AIEmployee_ProactiveEngine",
-            "description": "Every 6 hours — Proactive vault scan for suggestions",
-            "days": "MON,TUE,WED,THU,FRI,SAT,SUN",
-            "time": "06:00",
-            "command": str(UV),
-            "args": f'{PYTHON_ARGS} python proactive_engine.py',
-        },
     ]
 
     print("Installing scheduled tasks...")
@@ -158,8 +142,6 @@ def remove_tasks():
         "AIEmployee_SocialFB_IG",
         "AIEmployee_SocialLinkedIn",
         "AIEmployee_CEOBriefing",
-        "AIEmployee_CalendarAgenda",
-        "AIEmployee_ProactiveEngine",
     ]
     print("Removing scheduled tasks...")
     for name in task_names:
@@ -177,8 +159,6 @@ def show_status():
         "AIEmployee_SocialFB_IG",
         "AIEmployee_SocialLinkedIn",
         "AIEmployee_CEOBriefing",
-        "AIEmployee_CalendarAgenda",
-        "AIEmployee_ProactiveEngine",
     ]
     print("Scheduled task status:")
     for name in task_names:

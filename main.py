@@ -197,15 +197,6 @@ def _triage_file(path: Path, vault: VaultIO):
             recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Fallback triage: `{path.name}` → Needs_Action"
         )
 
-    # Scan for meeting mentions after triage
-    try:
-        from calendar_assistant import scan_for_meetings
-        n_meetings = scan_for_meetings(vault)
-        if n_meetings:
-            log.info("[Calendar] %d meeting suggestion(s) written to Plans/", n_meetings)
-    except Exception:
-        pass
-
 
 class InboxHandler(FileSystemEventHandler):
     def __init__(self, vault: VaultIO):
@@ -249,19 +240,7 @@ def _plan_file(path: Path, vault: VaultIO):
         return
 
     with ErrorRecovery("plan_generator", f"Generate plan for {task_name}"):
-        # Inject contact context for personalized replies
-        try:
-            from contact_manager import get_contact_context, record_interaction
-            contact_ctx = get_contact_context(task_content)
-            if contact_ctx:
-                task_content_with_ctx = f"[Contact context: {contact_ctx}]\n\n{task_content}"
-                log.info("[Plan] Contact context found — injecting into plan generation")
-            else:
-                task_content_with_ctx = task_content
-        except Exception:
-            task_content_with_ctx = task_content
-
-        plan_content = _generate_plan_via_router(task_name, task_content_with_ctx)
+        plan_content = _generate_plan_via_router(task_name, task_content)
         if not plan_content:
             log.warning("[Plan] Using fallback plan for %s", task_name)
             plan_content = _generate_plan_fallback(task_name, task_content)
@@ -563,30 +542,6 @@ def main(args=None):
     )
     gmail_thread.start()
     log.info("[Gmail]      Polling Gmail every 2 min for unread important emails")
-
-    # Proactive Intelligence Engine (every 6 hours)
-    if not getattr(args, "no_proactive", False):
-        try:
-            from proactive_engine import _proactive_poll_loop
-            proactive_thread = threading.Thread(
-                target=_proactive_poll_loop, daemon=True, name="proactive-engine"
-            )
-            proactive_thread.start()
-            log.info("[Proactive]  Proactive Intelligence Engine running every 6h")
-        except Exception as exc:
-            log.warning("[Proactive] Could not start proactive engine: %s", exc)
-
-    # Calendar daily agenda (fires at 7 AM every day)
-    if not getattr(args, "no_calendar", False):
-        try:
-            from calendar_assistant import _calendar_agenda_loop
-            calendar_thread = threading.Thread(
-                target=_calendar_agenda_loop, daemon=True, name="calendar-agenda"
-            )
-            calendar_thread.start()
-            log.info("[Calendar]   Daily agenda email scheduled for 7:00 AM")
-        except Exception as exc:
-            log.warning("[Calendar] Could not start calendar agenda: %s", exc)
 
     # WhatsApp watcher in background thread (skip if --no-whatsapp)
     if not args.no_whatsapp:

@@ -67,21 +67,17 @@ log = logging.getLogger("approval-watcher")
 
 
 def _detect_source(plan_name: str, plan_content: str) -> str:
-    """Return 'whatsapp', 'linkedin', 'calendar', or 'email' based on plan origin."""
+    """Return 'whatsapp', 'linkedin', or 'email' based on plan origin."""
     name_lower = plan_name.lower()
     if "whatsapp" in name_lower:
         return "whatsapp"
     if "linkedin" in name_lower:
         return "linkedin"
-    if "calendar" in name_lower:
-        return "calendar"
     for line in plan_content.splitlines():
         if "source: whatsapp" in line.lower():
             return "whatsapp"
         if "source: linkedin" in line.lower():
             return "linkedin"
-        if "source: calendar" in line.lower():
-            return "calendar"
     return "email"
 
 
@@ -344,7 +340,7 @@ def _execute_linkedin_plan(plan_name: str, plan_content: str) -> tuple[bool, str
 
 def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
     """
-    Execute an approved plan — routes to WhatsApp, LinkedIn, Calendar, or email.
+    Execute an approved plan — routes to WhatsApp, LinkedIn, or email based on source.
     Returns (success, report_markdown).
     """
     source = _detect_source(plan_name, plan_content)
@@ -352,9 +348,6 @@ def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
         return _execute_whatsapp_plan(plan_name, plan_content)
     if source == "linkedin":
         return _execute_linkedin_plan(plan_name, plan_content)
-    if source == "calendar":
-        from calendar_assistant import execute_calendar_plan
-        return execute_calendar_plan(plan_content)
 
     # Email path
     from gmail_mcp_server import send_email
@@ -478,21 +471,6 @@ result: {result_str}
             log.error("Failed to move task to Done: %s", exc)
     else:
         log.info("No matching task file found for %s — skipping task move.", plan_name)
-
-    # Record contact interaction
-    try:
-        from contact_manager import record_interaction
-        source = _detect_source(plan_name, plan_content)
-        if source == "whatsapp":
-            chat = _get_original_task_chat(plan_name)
-            if chat:
-                record_interaction(chat, "whatsapp_reply", f"Replied via plan {plan_name}")
-        elif source == "email":
-            sender = _get_original_task_sender(plan_name)
-            if sender:
-                record_interaction(sender, "email_sent", f"Sent reply via plan {plan_name}")
-    except Exception as _exc:
-        log.debug("[Contacts] record_interaction skipped: %s", _exc)
 
     # Audit log
     vault.log_action(

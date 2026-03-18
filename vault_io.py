@@ -95,13 +95,12 @@ class VaultIO:
         self.reports = self.root / "Reports"
         self.queue = self.root / "Queue"
         self.errors = self.root / "Errors"
-        self.contacts = self.root / "Contacts"
 
         # Ensure all folders exist
         for folder in [
             self.inbox, self.needs_action, self.plans,
             self.pending_approval, self.approved, self.done, self.logs,
-            self.briefings, self.reports, self.queue, self.errors, self.contacts,
+            self.briefings, self.reports, self.queue, self.errors,
         ]:
             folder.mkdir(parents=True, exist_ok=True)
 
