@@ -422,89 +422,195 @@ def run_watcher(daemon: bool = False):
         def do_send_message(chat_name: str, message: str) -> bool:
             """Send a WhatsApp message to `chat_name` using the current page."""
             try:
-                # 1. Open the search box
-                search_box = None
-                for search_sel in [
-                    '[data-testid="search"]',
-                    'div[contenteditable="true"][data-tab="3"]',
-                    '[title="Search input textbox"]',
-                    'div[role="textbox"][title]',
-                ]:
-                    el = page.query_selector(search_sel)
-                    if el:
-                        search_box = el
-                        break
+                # 1. Open the search panel and get the input focused
+                # Strategy: use Ctrl+F (WhatsApp Web keyboard shortcut for search),
+                # then fall back to clicking any search icon, then direct selector.
+                def _open_search_and_get_input():
+                    # Try direct input selectors first (input may already be visible)
+                    for sel in [
+                        'div[contenteditable="true"][data-tab="3"]',
+                        '[data-testid="search-input"]',
+                        '[placeholder*="earch"]',
+                        '[title*="earch"]',
+                    ]:
+                        el = page.query_selector(sel)
+                        if el:
+                            log.info("[WA] Search input found directly: %s", sel)
+                            return el
 
-                if not search_box:
+                    # Use Ctrl+F keyboard shortcut to open search (most reliable)
+                    log.info("[WA] Trying Ctrl+F to open search...")
+                    page.keyboard.press("Control+f")
+                    time.sleep(0.8)
+                    for sel in [
+                        'div[contenteditable="true"][data-tab="3"]',
+                        '[data-testid="search-input"]',
+                        '[placeholder*="earch"]',
+                        '[title*="earch"]',
+                    ]:
+                        try:
+                            el = page.wait_for_selector(sel, timeout=2000)
+                            if el:
+                                log.info("[WA] Search input found after Ctrl+F: %s", sel)
+                                return el
+                        except Exception:
+                            continue
+
+                    # Fall back: find and click any search-like element via JS
+                    log.info("[WA] Trying JS-based search element find...")
+                    el = page.evaluate_handle("""() => {
+                        const candidates = [
+                            document.querySelector('[data-testid="search"]'),
+                            document.querySelector('[data-testid="chat-list-search"]'),
+                            ...document.querySelectorAll('[role="button"]'),
+                            ...document.querySelectorAll('button'),
+                            ...document.querySelectorAll('span'),
+                        ];
+                        for (const el of candidates) {
+                            if (!el) continue;
+                            const label = (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || '').toLowerCase();
+                            if (label.includes('search')) return el;
+                        }
+                        return null;
+                    }""")
+                    try:
+                        if el and el.as_element():
+                            el.as_element().click()
+                            time.sleep(0.8)
+                    except Exception:
+                        pass
+
+                    # Last attempt after JS click
+                    for sel in [
+                        'div[contenteditable="true"][data-tab="3"]',
+                        '[data-testid="search-input"]',
+                        'div[contenteditable="true"]',
+                        'div[role="textbox"]',
+                    ]:
+                        try:
+                            el = page.wait_for_selector(sel, timeout=2000)
+                            if el:
+                                log.info("[WA] Search input found after JS click: %s", sel)
+                                return el
+                        except Exception:
+                            continue
+                    return None
+
+                search_input = _open_search_and_get_input()
+
+                if not search_input:
                     log.error("[WA] Could not find search box.")
                     return False
 
-                search_box.click()
+                search_input.click()
                 time.sleep(0.5)
-                # Select all and delete, then type — fill() doesn't trigger WhatsApp events
+                # Clear and type the chat name
                 page.keyboard.press("Control+a")
                 page.keyboard.press("Delete")
                 page.keyboard.type(chat_name, delay=50)
-                time.sleep(2.5)  # wait for search results
+                time.sleep(2.5)  # wait for search results to appear
 
-                # 2. Click the chat row — try exact match first, then startswith, then contains.
-                # The header safety check (step 3) ensures the correct chat actually opened.
-                clicked = False
-                target = chat_name.lower()
-                for pass_name, match_fn in [
-                    ("exact",    lambda n: n.lower() == target),
-                    ("starts",   lambda n: n.lower().startswith(target) or target.startswith(n.lower())),
-                    ("contains", lambda n: target in n.lower() or n.lower() in target),
-                ]:
-                    if clicked:
-                        break
-                    for row_sel in [
-                        '[data-testid="cell-frame-container"]',
-                        '[role="listitem"]',
-                        'div[tabindex="-1"]',
-                        'li',
+                # 2. Open the chat using keyboard navigation — more reliable than clicking DOM rows.
+                # Arrow Down selects the first result; Enter opens it.
+                log.info("[WA] Using keyboard to open chat '%s'...", chat_name)
+                page.keyboard.press("ArrowDown")
+                time.sleep(0.3)
+                page.keyboard.press("Enter")
+                time.sleep(3.0)  # wait for chat panel to render
+
+                # Verify chat opened by checking #main or [data-testid="main"] exists
+                main_exists = page.evaluate("() => !!(document.querySelector('#main') || document.querySelector('[data-testid=\"main\"]'))")
+                if not main_exists:
+                    # Fallback: try clicking the first visible result row
+                    log.warning("[WA] Keyboard nav didn't open chat — trying DOM click fallback.")
+                    clicked = False
+                    target = chat_name.lower()
+                    for pass_name, match_fn in [
+                        ("exact",    lambda n: n.lower() == target),
+                        ("starts",   lambda n: n.lower().startswith(target) or target.startswith(n.lower())),
+                        ("contains", lambda n: target in n.lower() or n.lower() in target),
                     ]:
-                        rows = page.query_selector_all(row_sel)
-                        for row in rows:
-                            try:
-                                title_el = (row.query_selector('span[title]')
-                                            or row.query_selector('span[dir="auto"]'))
-                                if title_el:
-                                    name = (title_el.get_attribute("title") or title_el.inner_text()).strip()
-                                    if match_fn(name):
-                                        row.click()
-                                        clicked = True
-                                        log.info("[WA] %s match: '%s' → clicking (target='%s').",
-                                                 pass_name, name, chat_name)
-                                        break
-                            except Exception:
-                                continue
                         if clicked:
                             break
+                        for row_sel in ['[data-testid="cell-frame-container"]', '[role="listitem"]', 'div[tabindex="-1"]', 'li']:
+                            rows = page.query_selector_all(row_sel)
+                            for row in rows:
+                                try:
+                                    title_el = row.query_selector('span[title]') or row.query_selector('span[dir="auto"]')
+                                    if title_el:
+                                        name = (title_el.get_attribute("title") or title_el.inner_text()).strip()
+                                        if match_fn(name):
+                                            row.click()
+                                            clicked = True
+                                            log.info("[WA] DOM click fallback: %s match '%s'", pass_name, name)
+                                            break
+                                except Exception:
+                                    continue
+                            if clicked:
+                                break
+                    if clicked:
+                        time.sleep(3.0)
+                    else:
+                        log.error("[WA] No match for '%s' in search results.", chat_name)
+                        return False
+                else:
+                    log.info("[WA] Chat panel opened via keyboard nav.")
 
-                if not clicked:
-                    log.error("[WA] No match for '%s' in search results — aborting send.", chat_name)
-                    return False
-
-                # Wait for the compose box to appear — confirms the chat has opened.
-                # Use data-tab="10" to distinguish compose from search (data-tab="3").
-                # No #main scope needed — data-tab is unique enough.
+                # Find compose box — try CSS selectors, then JS-based discovery
                 compose_box = None
                 for compose_sel in [
+                    '[data-testid="conversation-compose-box-input"]',
                     'div[contenteditable="true"][data-tab="10"]',
+                    'div[aria-label*="message" i][contenteditable="true"]',
+                    'div[aria-placeholder*="message" i]',
                     'div[contenteditable="true"][spellcheck="true"]',
-                    'div[role="textbox"][data-tab="10"]',
                     'footer div[contenteditable="true"]',
+                    'div[role="textbox"][data-tab="10"]',
                     'div[contenteditable="true"][class*="copyable"]',
+                    '#main div[contenteditable="true"]',
                 ]:
                     try:
-                        el = page.wait_for_selector(compose_sel, timeout=5000)
+                        el = page.wait_for_selector(compose_sel, timeout=2000)
                         if el:
                             compose_box = el
                             log.info("[WA] Compose box found via: %s", compose_sel)
                             break
                     except Exception:
                         continue
+
+                # JS fallback: find the contenteditable with the highest data-tab value
+                # (search=3, compose=10 historically — but find whichever is not the search box)
+                if not compose_box:
+                    try:
+                        info = page.evaluate("""() => {
+                            const results = {};
+                            results.contenteditable = [...document.querySelectorAll('[contenteditable]')].map(d => ({
+                                tag: d.tagName, tab: d.getAttribute('data-tab'),
+                                label: d.getAttribute('aria-label'), placeholder: d.getAttribute('aria-placeholder'),
+                                testid: d.getAttribute('data-testid'), cls: d.className.substring(0, 60),
+                            }));
+                            results.inputs = [...document.querySelectorAll('input,textarea')].map(d => ({
+                                tag: d.tagName, type: d.type, placeholder: d.placeholder,
+                                label: d.getAttribute('aria-label'), testid: d.getAttribute('data-testid'),
+                            }));
+                            results.mainExists = !!document.querySelector('#main');
+                            results.footerExists = !!document.querySelector('footer');
+                            results.url = window.location.href;
+                            return results;
+                        }""")
+                        log.info("[WA] Page state: %s", info)
+                        # Try to find any non-search editable element
+                        el = page.evaluate_handle("""() => {
+                            const all = [...document.querySelectorAll('[contenteditable="true"]')];
+                            return all.find(d => d.getAttribute('data-tab') !== '3')
+                                || document.querySelector('textarea')
+                                || null;
+                        }""")
+                        if el and el.as_element():
+                            compose_box = el.as_element()
+                            log.info("[WA] Compose box found via JS fallback.")
+                    except Exception as js_err:
+                        log.error("[WA] JS compose box discovery failed: %s", js_err)
 
                 if not compose_box:
                     log.error("[WA] Could not find compose box — chat may not have opened.")

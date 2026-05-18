@@ -536,6 +536,18 @@ def main(args=None):
 
     observer.start()
 
+    # Process any plans already waiting in Approved/ (e.g. from a previous failed run)
+    _pre_existing = list((vault.root / "Approved").glob("PLAN_*.md"))
+    if _pre_existing:
+        log.info("[Startup] Found %d pre-existing approved plan(s) — retrying...", len(_pre_existing))
+        def _retry_preexisting():
+            time.sleep(5)  # let WhatsApp watcher start first
+            from approval_watcher import process_approved_plan as _pap
+            for _p in _pre_existing:
+                if _p.exists():
+                    _pap(vault, _p)
+        threading.Thread(target=_retry_preexisting, daemon=True, name="startup-retry").start()
+
     # Gmail poller in background thread
     gmail_thread = threading.Thread(
         target=_gmail_poll_loop, args=(120,), daemon=True, name="gmail-poller"

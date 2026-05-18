@@ -56,7 +56,7 @@ LINKEDIN_TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken"
 LINKEDIN_UGC_URL = "https://api.linkedin.com/v2/ugcPosts"
 LINKEDIN_ME_URL = "https://api.linkedin.com/v2/userinfo"
 REDIRECT_URI = "http://localhost:8765/callback"
-SCOPES = "r_liteprofile w_member_social"
+SCOPES = "openid profile email w_member_social"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -134,16 +134,39 @@ def run_oauth_flow():
         "scope": SCOPES,
     }
     auth_url = f"{LINKEDIN_AUTH_URL}?{urlencode(auth_params)}"
-    log.info("Opening LinkedIn authorization page...")
+
+    # Try automatic callback server first, fall back to manual paste
+    print("\n" + "="*60)
+    print("LINKEDIN AUTHORIZATION")
+    print("="*60)
+    print(f"\nOpen this URL in your browser:\n\n  {auth_url}\n")
+    print("After clicking Allow, you will be redirected to localhost.")
+    print("If the browser shows an error page, copy the FULL URL")
+    print("from the address bar and paste it below.\n")
+
     webbrowser.open(auth_url)
 
+    # Try automatic callback for 30 seconds
     server = HTTPServer(("localhost", 8765), _OAuthCallbackHandler)
-    log.info("Waiting for OAuth callback on http://localhost:8765 ...")
-    server.handle_request()
+    server.timeout = 30
+    import time as _time
+    print("Waiting for automatic callback (30s)...")
+    deadline = _time.time() + 30
+    while not _OAuthCallbackHandler.auth_code and _time.time() < deadline:
+        server.handle_request()
 
     code = _OAuthCallbackHandler.auth_code
+
+    # Fall back to manual paste
     if not code:
-        log.error("Did not receive authorization code.")
+        print("\nAutomatic callback not received.")
+        print("Paste the full redirect URL from your browser address bar:")
+        pasted = input("URL: ").strip()
+        params = parse_qs(urlparse(pasted).query)
+        code = params.get("code", [None])[0]
+
+    if not code:
+        log.error("No authorization code found.")
         sys.exit(1)
 
     resp = requests.post(LINKEDIN_TOKEN_URL, data={
@@ -157,6 +180,7 @@ def run_oauth_flow():
     token_data = resp.json()
     TOKEN_FILE.write_text(json.dumps(token_data, indent=2), encoding="utf-8")
     log.info("Token saved to %s", TOKEN_FILE)
+    print("\nAuthorization complete! Token saved.")
 
 
 def _get_access_token() -> str:

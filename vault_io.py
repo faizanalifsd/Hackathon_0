@@ -181,6 +181,7 @@ class VaultIO:
 
     def move_to_pending_approval(self, rel_path: str) -> Path:
         """Move a plan file from Plans/ → Pending_Approval/."""
+        import time
         src = self.root / rel_path
         dest = self.pending_approval / src.name
         text = src.read_text(encoding="utf-8")
@@ -189,7 +190,14 @@ class VaultIO:
             "submitted": datetime.now().strftime("%Y-%m-%d %H:%M"),
         })
         dest.write_text(text, encoding="utf-8")
-        src.unlink()
+        for attempt in range(5):
+            try:
+                src.unlink()
+                break
+            except PermissionError:
+                if attempt == 4:
+                    raise
+                time.sleep(0.3)
         return dest
 
     def move_to_approved(self, rel_path: str) -> Path:

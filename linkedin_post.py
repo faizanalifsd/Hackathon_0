@@ -30,19 +30,36 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="repla
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="LinkedIn Post Creator")
+    parser.add_argument("--topic", default="", help="Post topic/idea (non-interactive)")
+    parser.add_argument("--tone", default="", help="Tone: professional / casual / inspiring (default: professional)")
+    args = parser.parse_args()
+
     print("=" * 50)
     print("  LinkedIn Post Creator")
     print("=" * 50)
     print()
 
-    topic = input("Enter your post topic or idea: ").strip()
+    topic = args.topic.strip()
+    if not topic:
+        try:
+            topic = input("Enter your post topic or idea: ").strip()
+        except EOFError:
+            print("ERROR: No topic provided. Use --topic \"Your topic\" when running non-interactively.")
+            sys.exit(1)
     if not topic:
         print("No topic entered. Exiting.")
         return
 
-    tone = input("Tone? (professional / casual / inspiring) [professional]: ").strip()
+    tone = args.tone.strip()
     if not tone:
-        tone = "professional"
+        try:
+            tone = input("Tone? (professional / casual / inspiring) [professional]: ").strip()
+        except EOFError:
+            tone = ""
+        if not tone:
+            tone = "professional"
 
     # Create Inbox file
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")

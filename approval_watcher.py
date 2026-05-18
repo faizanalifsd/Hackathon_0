@@ -45,6 +45,8 @@ from vault_io import VaultIO
 BASE_DIR = Path(__file__).parent
 VAULT_ROOT = BASE_DIR / "Vault"
 APPROVED_DIR = VAULT_ROOT / "Approved"
+PENDING_DIR = VAULT_ROOT / "Pending_Approval"
+PLANS_DIR = VAULT_ROOT / "Plans"
 LOG_FILE = BASE_DIR / "approval_watcher.log"
 
 import io
@@ -432,6 +434,42 @@ def process_approved_plan(vault: VaultIO, plan_path: Path) -> None:
     result_str = "success" if success else "failed"
     log.info("Execution %s for %s", result_str, plan_name)
 
+    if not success:
+        # Leave plan in Approved/ so it can be retried once the channel is ready.
+        # Write a failed report to Done/ so the user can see what happened.
+        report_path = vault.root / "Done" / f"REPORT_{plan_name}"
+        report_content = f"""---
+type: execution_report
+plan: {plan_name}
+executed_at: {datetime.now().strftime("%Y-%m-%d %H:%M")}
+result: failed
+---
+
+# Execution Report: {plan_name}
+
+{output}
+
+---
+**Retry:** Plan left in `Vault/Approved/` — will be retried automatically when the pipeline restarts or WhatsApp/Gmail becomes available.
+"""
+        try:
+            report_path.write_text(report_content, encoding="utf-8")
+        except Exception as exc:
+            log.error("Failed to write report: %s", exc)
+        log.warning("[Execute] Execution failed — plan left in Approved/ for retry: %s", plan_name)
+        vault.log_action(
+            action_type="plan_executed",
+            actor="approval_watcher",
+            target=plan_name,
+            approval_status="approved",
+            result="failed",
+            details=output[:500] if output else "",
+        )
+        vault.update_dashboard(
+            recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — FAILED (retry pending): `{plan_name}`"
+        )
+        return
+
     # Write execution report as a note alongside the plan
     report_path = vault.root / "Done" / f"REPORT_{plan_name}"
     report_content = f"""---
@@ -578,17 +616,136 @@ class ApprovedHandler(FileSystemEventHandler):
 
 
 # ---------------------------------------------------------------------------
+# Checkbox watcher — Pending_Approval/ → Approved/ or Done/
+# ---------------------------------------------------------------------------
+
+def _check_for_decision(text: str) -> str | None:
+    """
+    Return 'approve', 'pending', 'reject', or None based on checked checkboxes.
+    Matches `- [x] Approve`, `- [x] Pending`, `- [x] Reject` (case-insensitive).
+    """
+    for line in text.splitlines():
+        stripped = line.strip().lower()
+        if stripped.startswith("- [x]"):
+            label = stripped[5:].strip()
+            if label.startswith("approve"):
+                return "approve"
+            if label.startswith("pending"):
+                return "pending"
+            if label.startswith("reject"):
+                return "reject"
+    return None
+
+
+class PlansHandler(FileSystemEventHandler):
+    """Watch Plans/ for checkbox changes — Approve → Approved/, Pending → Pending_Approval/."""
+
+    def __init__(self, vault: VaultIO):
+        self.vault = vault
+        self._processing: set[str] = set()
+
+    def _handle(self, path: Path):
+        if path.suffix.lower() != ".md" or path.parent != PLANS_DIR:
+            return
+        if path.name in self._processing:
+            return
+
+        time.sleep(0.5)
+        try:
+            text = path.read_text(encoding="utf-8")
+        except Exception:
+            return
+
+        decision = _check_for_decision(text)
+        if not decision:
+            return
+
+        self._processing.add(path.name)
+        try:
+            if decision == "approve":
+                log.info("[Plans] Approved via checkbox: %s → Approved/", path.name)
+                import shutil
+                dest = APPROVED_DIR / path.name
+                shutil.copy2(path, dest)
+                time.sleep(0.3)
+                path.unlink(missing_ok=True)
+                log.info("[Plans] Moved to Approved/ — will publish now.")
+            elif decision == "pending":
+                log.info("[Plans] Marked pending via checkbox: %s → Pending_Approval/", path.name)
+                self.vault.move_to_pending_approval(f"Plans/{path.name}")
+                log.info("[Plans] Moved to Pending_Approval/.")
+        except Exception as exc:
+            log.error("[Plans] Failed to move %s: %s", path.name, exc)
+        finally:
+            self._processing.discard(path.name)
+
+    def on_modified(self, event):
+        if not event.is_directory:
+            self._handle(Path(event.src_path))
+
+
+class PendingApprovalHandler(FileSystemEventHandler):
+    """Watch Pending_Approval/ for checkbox changes — Approve → Approved/, Reject → Done/."""
+
+    def __init__(self, vault: VaultIO):
+        self.vault = vault
+        self._processing: set[str] = set()
+
+    def _handle(self, path: Path):
+        if path.suffix.lower() != ".md" or path.parent != PENDING_DIR:
+            return
+        if path.name in self._processing:
+            return
+
+        time.sleep(0.5)  # let Obsidian finish writing
+        try:
+            text = path.read_text(encoding="utf-8")
+        except Exception:
+            return
+
+        decision = _check_for_decision(text)
+        if not decision:
+            return
+
+        self._processing.add(path.name)
+        try:
+            if decision == "approve":
+                log.info("[Checkbox] Approved via checkbox: %s → Approved/", path.name)
+                dest = APPROVED_DIR / path.name
+                import shutil
+                shutil.copy2(path, dest)
+                time.sleep(0.3)
+                path.unlink(missing_ok=True)
+                log.info("[Checkbox] Moved to Approved/ — approval_watcher will publish.")
+            elif decision == "reject":
+                log.info("[Checkbox] Rejected via checkbox: %s → Done/", path.name)
+                rel = f"Pending_Approval/{path.name}"
+                self.vault.move_to_done(rel, summary="Rejected via checkbox in Obsidian")
+                log.info("[Checkbox] Moved to Done/.")
+        except Exception as exc:
+            log.error("[Checkbox] Failed to move %s: %s", path.name, exc)
+        finally:
+            self._processing.discard(path.name)
+
+    def on_modified(self, event):
+        if not event.is_directory:
+            self._handle(Path(event.src_path))
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(description="HITL Approval Watcher")
     parser.add_argument("--daemon", action="store_true",
-                        help="Watch Approved/ folder continuously via watchdog")
+                        help="Watch Approved/ + Pending_Approval/ folders continuously")
     args = parser.parse_args()
 
     vault = VaultIO()
     APPROVED_DIR.mkdir(parents=True, exist_ok=True)
+    PENDING_DIR.mkdir(parents=True, exist_ok=True)
+    PLANS_DIR.mkdir(parents=True, exist_ok=True)
 
     log.info("Approval Watcher started.")
 
@@ -597,12 +754,16 @@ def main():
         n = process_all_approved(vault)
         log.info("Processed %d pre-existing approved item(s).", n)
 
-        # Then watch for new ones
-        handler = ApprovedHandler(vault)
+        approved_handler = ApprovedHandler(vault)
+        pending_handler = PendingApprovalHandler(vault)
+        plans_handler = PlansHandler(vault)
+
         observer = Observer()
-        observer.schedule(handler, str(APPROVED_DIR), recursive=False)
+        observer.schedule(approved_handler, str(APPROVED_DIR), recursive=False)
+        observer.schedule(pending_handler, str(PENDING_DIR), recursive=False)
+        observer.schedule(plans_handler, str(PLANS_DIR), recursive=False)
         observer.start()
-        log.info("Watching Vault/Approved/ for new approvals. Press Ctrl+C to stop.")
+        log.info("Watching Plans/, Pending_Approval/, Approved/ — checkboxes active.")
         try:
             while True:
                 time.sleep(1)

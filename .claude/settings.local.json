@@ -8,7 +8,10 @@
       "Bash(ls:*)",
       "Bash(grep:*)",
       "Bash(cd E:/Hackathon_0 && uv run python main.py)",
-      "Bash(rm -f E:/Hackathon_0/Vault/Needs_Action/*.md && rm -f E:/Hackathon_0/Vault/Plans/*.md && rm -f E:/Hackathon_0/Vault/Pending_Approval/*.md && echo \"Done\")"
+      "Bash(rm -f E:/Hackathon_0/Vault/Needs_Action/*.md && rm -f E:/Hackathon_0/Vault/Plans/*.md && rm -f E:/Hackathon_0/Vault/Pending_Approval/*.md && echo \"Done\")",
+      "Bash(cmd.exe /c \"taskkill /F /IM chrome.exe 2>nul & exit 0\" && sleep 2 && cd E:/Hackathon_0 && uv run python whatsapp_watcher.py --daemon)",
+      "Bash(cd E:/Hackathon_0 && uv run python whatsapp_watcher.py --daemon)",
+      "Bash(uv run:*)"
     ]
   }
 }
