@@ -1,0 +1,83 @@
+[
+  {
+    "timestamp": "2026-05-14T09:55:32.654572",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260514_095412_Zeeshan_Bro_9d476a.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260514_095412_Zeeshan_Bro_9d476a.md"
+  },
+  {
+    "timestamp": "2026-05-14T09:56:19.662590",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260514_095412_Zeeshan_Bro_9d476a.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-14T09:56:58.563239",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260514_095412_Zeeshan_Bro_9d476a.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Bro' | Sent |\n| Message | Sounds interesting, can you share more details about the party plan so I can give you my thoughts? |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-14T10:02:05.947241",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260514_100051_Bakra_Eid.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260514_100051_Bakra_Eid.md"
+  },
+  {
+    "timestamp": "2026-05-14T10:03:13.067473",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_email_20260514_100051_Bakra_Eid.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-14T10:03:15.200568",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260514_100051_Bakra_Eid.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to zeeshanali02004@gmail.com | Sent (ID: `19e24de14f40bb6b`) |\n| Subject | Re: Bakra Eid |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-14T10:08:28.268790",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260514_100750_openclaw_revolution.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260514_100750_openclaw_revolution.md"
+  },
+  {
+    "timestamp": "2026-05-14T10:08:46.852950",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260514_100750_openclaw_revolution.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-14T10:08:52.631629",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260514_100750_openclaw_revolution.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| LinkedIn post published | Done |\n| Post preview | # openclaw revolution\n\nAre you ready to witness the future of technology unfold before your eyes, as the OpenClaw revolu... |\n\n**Status: COMPLETE**"
+  }
+]

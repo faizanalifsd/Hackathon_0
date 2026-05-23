@@ -17,6 +17,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -66,18 +67,8 @@ def get_page_info() -> dict:
 
 
 def _get_page_token() -> tuple[str, str]:
-    """Exchange user token for page token if needed, return (page_token, page_id)."""
-    import requests
+    """Return (page_token, page_id) — uses the token from .env directly."""
     token, page_id = _get_credentials()
-    r = requests.get(
-        f"{FACEBOOK_GRAPH_URL}/me/accounts",
-        params={"access_token": token},
-        timeout=10,
-    )
-    r.raise_for_status()
-    for page in r.json().get("data", []):
-        if page.get("id") == page_id:
-            return page["access_token"], page_id
     return token, page_id
 
 
@@ -155,16 +146,11 @@ def _write_plan(vault, title: str, tone: str, post_text: str, timestamp: str) ->
         f"generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
         f"approval_needed: yes\n"
         f"---\n\n"
-        f"# Facebook Post Plan\n\n"
-        f"**Topic:** {title}  \n"
-        f"**Tone:** {tone}\n\n"
-        f"---\n\n"
         f"{post_text}\n\n"
         f"---\n\n"
-        f"**Platform:** Facebook Page\n\n"
         f"## Decision\n\n"
-        f"- [ ] Approve — publish to Facebook\n"
-        f"- [ ] Pending — move to Pending_Approval for later\n"
+        f"- [ ] ✅ Approve — publish to Facebook\n"
+        f"- [ ] ⏸ Pending Approval — hold for later review\n"
     )
     dest = vault.write_plan(plan_name, content)
     return dest.name  # e.g. PLAN_FACEBOOK_POST_20260516_141609.md
@@ -241,21 +227,50 @@ def cmd_request(title: str = "", tone: str = ""):
         print("Delete or approve it first before creating a new one.")
         sys.exit(1)
 
-    print(f"\nTone selected: {tone}")
-    print("Generating post...\n")
+    print(f"\nTone selected: {tone}\n")
 
     vault = VaultIO()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    inbox_filename = f"fb_request_{timestamp}.md"
 
-    # Generate + write Plan directly (no Inbox/Needs_Action — avoids reasoning_loop picking it up)
+    # Step 1 — Write to Inbox
+    inbox_content = (
+        f"---\n"
+        f"source: facebook_request\n"
+        f"received: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        f"status: inbox\n"
+        f"priority: medium\n"
+        f"tags: [facebook, social_media]\n"
+        f"summary: \"Facebook post request: {title}\"\n"
+        f"---\n\n"
+        f"# Facebook Post Request\n\n"
+        f"**Topic:** {title}  \n"
+        f"**Tone:** {tone}\n"
+    )
+    vault.write_inbox(inbox_filename, inbox_content)
+    print(f"[1/3] Request written  ->  Vault/Inbox/{inbox_filename}")
+    time.sleep(3)
+
+    # Step 2 — Move to Needs_Action (skip if watcher already moved it during the sleep)
+    if (vault.inbox / inbox_filename).exists():
+        vault.move_to_needs_action(
+            f"Inbox/{inbox_filename}",
+            summary=f"Facebook post request: {title}",
+            tags=["facebook", "social_media"],
+        )
+    print(f"[2/3] Moved            ->  Vault/Needs_Action/{inbox_filename}")
+    print("      Generating post text via Groq...")
+
+    # Step 3 — Generate post + write Plan (file stays in Needs_Action while this runs)
     post_text = _generate_post_text(title, tone)
     if not post_text:
         print("ERROR: Could not generate post text. Check Groq API key.")
         sys.exit(1)
     plan_file = _write_plan(vault, title, tone, post_text, timestamp)
-    print(f"[1/1] Plan written to Plans/{plan_file}\n")
+    # Clean up the request file — it was only needed for the visual pipeline walk
+    (vault.needs_action / inbox_filename).unlink(missing_ok=True)
+    print(f"[3/3] Plan written     ->  Vault/Plans/{plan_file}\n")
 
-    # Log
     vault.log_action(
         action_type="facebook_post_drafted",
         actor="facebook_mcp_server",
@@ -263,15 +278,13 @@ def cmd_request(title: str = "", tone: str = ""):
         approval_status="awaiting_review",
         result="success",
     )
-
-    # Update dashboard
     vault.update_dashboard(
         recent_activity=f"- Facebook post drafted: **{title}** ({tone}) → Plans/"
     )
 
     print("=" * 40)
     print("Post draft ready for review.")
-    print(f"\nDraft post preview:\n")
+    print("\nDraft post preview:\n")
     print("-" * 40)
     print(post_text.encode(sys.stdout.encoding, errors="replace").decode(sys.stdout.encoding))
     print("-" * 40)
@@ -297,19 +310,9 @@ def cmd_post():
         content = post_file.read_text(encoding="utf-8")
 
         # Extract post text: everything after the second --- and before ## Decision
-        body = content.split("---", 2)[-1]  # strip frontmatter
-        decision_split = body.split("## Decision")
-        post_text = decision_split[0].strip()
-        # Also strip the topic/tone header lines at the top of the body
-        lines = post_text.splitlines()
-        post_text = "\n".join(
-            l for l in lines
-            if not l.startswith("# Facebook Post Plan")
-            and not l.startswith("**Topic:**")
-            and not l.startswith("**Tone:**")
-            and not l.startswith("**Platform:**")
-            and l.strip() != "---"
-        ).strip()
+        # Extract post text: everything after frontmatter and before ## Decision
+        body = content.split("---", 2)[-1]
+        post_text = body.split("## Decision")[0].strip()
 
         if not post_text:
             print(f"  SKIP {post_file.name} — could not extract post text.")

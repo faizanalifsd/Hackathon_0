@@ -1,0 +1,20 @@
+[
+  {
+    "timestamp": "2026-05-17T12:22:27.168865",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260517_122223.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-17T12:41:56.410493",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260516_151429_openclaw_ai.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to publish LinkedIn post: 401 Client Error: Unauthorized for url: https://api.linkedin.com/v2/userinfo\n\n**Status: BLOCKED**"
+  }
+]

@@ -403,6 +403,21 @@ def _execute_plan(plan_name: str, plan_content: str) -> tuple[bool, str]:
         return False, f"## Execution Report\n\nFailed to send email: {exc}\n\n**Status: BLOCKED**"
 
 
+def _delete_related_fb_request(plan_name: str, vault: VaultIO) -> None:
+    """Delete the fb_request_*.md that spawned this Facebook plan, if it still exists anywhere."""
+    import re
+    match = re.search(r"FACEBOOK_POST_(\d{8}_\d{6})", plan_name)
+    if not match:
+        return
+    request_name = f"fb_request_{match.group(1)}.md"
+    for folder in [vault.inbox, vault.needs_action, vault.plans, vault.pending_approval, vault.done]:
+        candidate = folder / request_name
+        if candidate.exists():
+            candidate.unlink()
+            log.info("[Cleanup] Deleted orphaned fb_request: %s/%s", folder.name, request_name)
+            return
+
+
 def _find_task_file(vault: VaultIO, plan_name: str) -> str | None:
     """
     Given PLAN_task.md, find the matching task.md in Needs_Action or Inbox.
@@ -531,10 +546,10 @@ def process_approved_social_post(vault: VaultIO, post_path: Path) -> None:
     name = post_path.name
     log.info("Processing approved social post: %s", name)
     try:
-        if name.startswith("FACEBOOK_POST_"):
-            from facebook_mcp_server import publish_approved_facebook_posts
-            count = publish_approved_facebook_posts()
-            log.info("[Facebook] Published %d post(s).", count)
+        if "FACEBOOK_POST_" in name:
+            from facebook_mcp_server import cmd_post
+            cmd_post()
+            log.info("[Facebook] Published post(s).")
         elif name.startswith("INSTAGRAM_POST_"):
             from instagram_mcp_server import publish_approved_instagram_posts
             count = publish_approved_instagram_posts()
@@ -599,12 +614,14 @@ class ApprovedHandler(FileSystemEventHandler):
             return
         name = path.name
         time.sleep(1)  # ensure file is fully written
-        if name.startswith("PLAN_"):
-            log.info("New approved plan detected: %s", name)
-            process_approved_plan(self.vault, path)
-        elif any(name.startswith(p) for p in ("FACEBOOK_POST_", "INSTAGRAM_POST_", "LINKEDIN_POST_")):
+        social_prefixes = ("PLAN_FACEBOOK_POST_", "PLAN_INSTAGRAM_POST_", "PLAN_LINKEDIN_POST_",
+                           "FACEBOOK_POST_", "INSTAGRAM_POST_", "LINKEDIN_POST_")
+        if any(name.startswith(p) for p in social_prefixes):
             log.info("New approved social post detected: %s", name)
             process_approved_social_post(self.vault, path)
+        elif name.startswith("PLAN_"):
+            log.info("New approved plan detected: %s", name)
+            process_approved_plan(self.vault, path)
 
     def on_created(self, event):
         if not event.is_directory:
@@ -669,10 +686,12 @@ class PlansHandler(FileSystemEventHandler):
                 shutil.copy2(path, dest)
                 time.sleep(0.3)
                 path.unlink(missing_ok=True)
+                _delete_related_fb_request(path.name, self.vault)
                 log.info("[Plans] Moved to Approved/ — will publish now.")
             elif decision == "pending":
                 log.info("[Plans] Marked pending via checkbox: %s → Pending_Approval/", path.name)
                 self.vault.move_to_pending_approval(f"Plans/{path.name}")
+                _delete_related_fb_request(path.name, self.vault)
                 log.info("[Plans] Moved to Pending_Approval/.")
         except Exception as exc:
             log.error("[Plans] Failed to move %s: %s", path.name, exc)
@@ -716,11 +735,13 @@ class PendingApprovalHandler(FileSystemEventHandler):
                 shutil.copy2(path, dest)
                 time.sleep(0.3)
                 path.unlink(missing_ok=True)
+                _delete_related_fb_request(path.name, self.vault)
                 log.info("[Checkbox] Moved to Approved/ — approval_watcher will publish.")
             elif decision == "reject":
                 log.info("[Checkbox] Rejected via checkbox: %s → Done/", path.name)
                 rel = f"Pending_Approval/{path.name}"
                 self.vault.move_to_done(rel, summary="Rejected via checkbox in Obsidian")
+                _delete_related_fb_request(path.name, self.vault)
                 log.info("[Checkbox] Moved to Done/.")
         except Exception as exc:
             log.error("[Checkbox] Failed to move %s: %s", path.name, exc)

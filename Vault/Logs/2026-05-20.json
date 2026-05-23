@@ -1,0 +1,173 @@
+[
+  {
+    "timestamp": "2026-05-20T12:17:53.702190",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260520_121728.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260520_121728.md"
+  },
+  {
+    "timestamp": "2026-05-20T12:19:25.038486",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260520_121920.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260520_121920.md"
+  },
+  {
+    "timestamp": "2026-05-20T12:19:30.227488",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260520_121920.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-20T12:23:59.505577",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260520_122355.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260520_122355.md"
+  },
+  {
+    "timestamp": "2026-05-20T12:24:05.853584",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-20T12:25:36.724693",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260520_121920.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-20T12:25:37.750949",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260520_121920.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\nNo outgoing email found in plan.\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-20T12:29:09.479808",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-20T12:29:10.491955",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\nNo outgoing email found in plan.\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-20T12:34:44.998049",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-20T12:34:46.009994",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\nNo outgoing email found in plan.\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-20T12:36:47.543022",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-20T12:36:48.560127",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\nNo outgoing email found in plan.\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-20T12:42:04.795460",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-20T12:42:06.584450",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "400 Client Error: Bad Request for url: https://graph.facebook.com/v19.0/me/accounts?access_token=EAAN4pawOm7cBRUu5gZC5H3dx94qHibKeIyfk8Y2v29f8ulQF4y4dzVc3eeTXsv3BqYpU03YZAbF7XvMir9cN1Bj1Te9I3pVXnwMXEXJb6WzwaDoZA8dsa0xrVpxLZAXAWMf0YvBXsnKZBv9DndPjyQsvnL2ibdzNBL8m7NgZBKFhV6KhslqpvHj1sV03TKArHbiCuZCWsZAPvEGBUm2V2X138fx8p0sX4Lb0ZAZCTgaDtqpdKusZB2iI60CaiQERenj1uF6vN8ZBhkUKPklzsb0hTVR3C2gx"
+  },
+  {
+    "timestamp": "2026-05-20T12:42:06.603450",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-20T12:42:07.911684",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "FAILED_facebook_PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_FAILED_facebook_PLAN_FACEBOOK_POST_20260520_122355.md"
+  },
+  {
+    "timestamp": "2026-05-20T12:59:51.307294",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "400 Client Error: Bad Request for url: https://graph.facebook.com/v19.0/me/accounts?access_token=EAAN4pawOm7cBRjkGZArVvfSZAvUdlIq3gceLzqGH8ZB9gJN7Gd1LMaZCfADV78adcbjZBlD54vdPgmBt8vJPJDx5quZCktaRY1bqvYBZABdATfzWBUZBeTjAxUKZBeYZCkxgwTG5ZCRk5dWf3cDWi1tdC4WU9r0ZB8pioN2kfRIpfCZAcZBvIjuhDPyJj7ktrRf9ZB5yEOhVQrC"
+  },
+  {
+    "timestamp": "2026-05-20T13:00:30.287781",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260520_122355.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "1120254604511205_122103015087319078"
+  }
+]

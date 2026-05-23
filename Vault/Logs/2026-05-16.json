@@ -1,0 +1,164 @@
+[
+  {
+    "timestamp": "2026-05-16T14:16:09.919326",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "FACEBOOK_POST_20260516_141609.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-16T14:18:24.112820",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "FACEBOOK_POST_20260516_141609.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "1120254604511205_122100651003319078"
+  },
+  {
+    "timestamp": "2026-05-16T14:27:50.784589",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260516_142747.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-16T14:28:30.718702",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260516_142828.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-16T14:41:14.023650",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260516_143914_Batch_50-85_Discussion_dfd1de.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260516_143914_Batch_50-85_Discussion_dfd1de.md"
+  },
+  {
+    "timestamp": "2026-05-16T14:46:50.392361",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260516_144648.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260516_144648.md"
+  },
+  {
+    "timestamp": "2026-05-16T14:46:52.369299",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260516_144648.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-16T14:50:30.904656",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260516_145028.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260516_145028.md"
+  },
+  {
+    "timestamp": "2026-05-16T14:51:02.254799",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260516_145100.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260516_145100.md"
+  },
+  {
+    "timestamp": "2026-05-16T14:51:11.327652",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260516_145100.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-16T14:58:03.586748",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260516_145802.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260516_145802.md"
+  },
+  {
+    "timestamp": "2026-05-16T14:58:06.934559",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260516_145802.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-16T15:03:04.733892",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260516_150303.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260516_150303.md"
+  },
+  {
+    "timestamp": "2026-05-16T15:03:09.897195",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260516_150303.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-16T15:14:56.468474",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260516_151429_openclaw_ai.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260516_151429_openclaw_ai.md"
+  },
+  {
+    "timestamp": "2026-05-16T15:17:13.213582",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260516_151429_openclaw_ai.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-16T15:17:15.681859",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260516_151429_openclaw_ai.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to publish LinkedIn post: 401 Client Error: Unauthorized for url: https://api.linkedin.com/v2/userinfo\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-05-16T15:17:51.033656",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260516_151625_Claude_Code_and_MCP_Integration.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260516_151625_Claude_Code_and_MCP_Integration.md"
+  }
+]

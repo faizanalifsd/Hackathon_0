@@ -1,0 +1,218 @@
+[
+  {
+    "timestamp": "2026-05-21T10:55:46.106106",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260521_105544.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260521_105544.md"
+  },
+  {
+    "timestamp": "2026-05-21T10:57:59.671943",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260521_105755.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260521_105755.md"
+  },
+  {
+    "timestamp": "2026-05-21T10:58:04.222943",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260521_105755.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:01:08.047200",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260521_105755.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:01:13.846947",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260521_105755.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "1120254604511205_122103270993319078"
+  },
+  {
+    "timestamp": "2026-05-21T11:01:13.891021",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260521_105755.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:17:22.108579",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260521_111717.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260521_111717.md"
+  },
+  {
+    "timestamp": "2026-05-21T11:17:27.135574",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260521_111717.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:18:04.265037",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260521_111717.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:18:08.298500",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260521_111717.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "1120254604511205_122103272529319078"
+  },
+  {
+    "timestamp": "2026-05-21T11:18:08.331454",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260521_111717.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:35:52.340905",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260521_113547.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260521_113547.md"
+  },
+  {
+    "timestamp": "2026-05-21T11:35:57.523964",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260521_113547.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:36:30.378834",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260521_113547.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:36:34.215953",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260521_113547.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "1120254604511205_122103275955319078"
+  },
+  {
+    "timestamp": "2026-05-21T11:36:34.255903",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260521_113547.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:44:32.475526",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260521_114427.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260521_114427.md"
+  },
+  {
+    "timestamp": "2026-05-21T11:44:36.952528",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260521_114427.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:45:49.521890",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260521_114427.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:46:00.673645",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260521_114427.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "HTTPSConnectionPool(host='graph.facebook.com', port=443): Read timed out. (read timeout=10)"
+  },
+  {
+    "timestamp": "2026-05-21T11:46:00.696620",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260521_114427.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-21T11:46:01.567299",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "FAILED_facebook_PLAN_FACEBOOK_POST_20260521_114427.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_FAILED_facebook_PLAN_FACEBOOK_POST_20260521_114427.md"
+  },
+  {
+    "timestamp": "2026-05-21T11:46:01.680517",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260521_114427.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "1120254604511205_122103278145319078"
+  },
+  {
+    "timestamp": "2026-05-21T11:46:01.696480",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260521_114427.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  }
+]

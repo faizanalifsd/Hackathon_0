@@ -127,62 +127,26 @@ def _whatsapp_poll_loop():
 # ---------------------------------------------------------------------------
 
 def _triage_file(path: Path, vault: VaultIO):
-    """Run vault-triage on a new Inbox file via claude CLI."""
+    """Triage a new Inbox file: classify via router and move to Needs_Action."""
     from error_recovery import ErrorRecovery
-    import subprocess, shutil
     rel = path.relative_to(vault.root)
     log.info("[Triage] Processing: %s", path.name)
 
-    # Find claude CLI
-    claude = None
-    for candidate in (["claude.cmd", "claude"] if sys.platform == "win32" else ["claude"]):
-        found = shutil.which(candidate)
-        if found:
-            claude = found
-            break
-    if not claude:
-        npm_path = Path.home() / "AppData/Roaming/npm/claude.cmd"
-        if npm_path.exists():
-            claude = str(npm_path)
-
-    if claude:
-        try:
-            import os
-            env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
-            result = subprocess.run(
-                [claude, "--print",
-                 f"Use the vault-triage skill to process this new inbox item: {rel}"],
-                capture_output=True, text=True, timeout=120,
-                cwd=str(BASE_DIR), env=env,
-            )
-            if result.returncode == 0:
-                # Verify the file was actually moved out of Inbox
-                if not path.exists():
-                    log.info("[Triage] Done: %s", path.name)
-                    return
-                log.warning("[Triage] Claude exited 0 but file still in Inbox — running fallback")
-            else:
-                log.warning("[Triage] Claude exit %d: %s", result.returncode, result.stderr[:200])
-        except Exception as exc:
-            log.warning("[Triage] Claude error: %s", exc)
-
-    # If Claude CLI already moved the file out of Inbox, skip silently
     if not path.exists():
-        log.info("[Triage] %s already moved by Claude CLI — skipping fallback.", path.name)
+        log.info("[Triage] %s already moved — skipping.", path.name)
         return
 
-    # Fallback: classify via router then move to Needs_Action
-    log.info("[Triage] Fallback: classifying %s via router → Needs_Action/", path.name)
-    with ErrorRecovery("triage", f"Fallback triage of {path.name}"):
+    # Fast path: classify via router (2–5s) — no Claude CLI subprocess overhead
+    with ErrorRecovery("triage", f"Triage of {path.name}"):
         classification = {"priority": "medium", "summary": "Auto-triaged — review needed"}
         try:
             from router import classify_email
             raw = path.read_text(encoding="utf-8")
             classification = classify_email(raw)
-            log.info("[Triage] Router classified: priority=%s summary=%s",
+            log.info("[Triage] Classified: priority=%s summary=%s",
                      classification.get("priority"), classification.get("summary", "")[:60])
         except Exception as exc:
-            log.warning("[Triage] Router classification failed: %s", exc)
+            log.warning("[Triage] Classification failed: %s", exc)
 
         if not path.exists():
             log.info("[Triage] %s moved during classification — skipping.", path.name)
@@ -194,7 +158,7 @@ def _triage_file(path: Path, vault: VaultIO):
             priority=classification.get("priority", "medium"),
         )
         vault.update_dashboard(
-            recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Fallback triage: `{path.name}` → Needs_Action"
+            recent_activity=f"- {datetime.now():%Y-%m-%d %H:%M} — Triaged: `{path.name}` → Needs_Action"
         )
 
 
@@ -474,9 +438,15 @@ class ApprovedHandler(FileSystemEventHandler):
             self._handle(Path(event.dest_path))
 
     def _execute(self, plan_path: Path):
-        from approval_watcher import process_approved_plan
-        log.info("[Execute] Approved plan detected: %s", plan_path.name)
-        process_approved_plan(self.vault, plan_path)
+        from approval_watcher import process_approved_plan, process_approved_social_post
+        name = plan_path.name
+        log.info("[Execute] Approved file detected: %s", name)
+        social_prefixes = ("PLAN_FACEBOOK_POST_", "PLAN_INSTAGRAM_POST_", "PLAN_LINKEDIN_POST_",
+                           "FACEBOOK_POST_", "INSTAGRAM_POST_", "LINKEDIN_POST_")
+        if any(name.startswith(p) for p in social_prefixes):
+            process_approved_social_post(self.vault, plan_path)
+        else:
+            process_approved_plan(self.vault, plan_path)
 
 
 # ---------------------------------------------------------------------------

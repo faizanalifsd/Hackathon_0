@@ -11,7 +11,12 @@
       "Bash(rm -f E:/Hackathon_0/Vault/Needs_Action/*.md && rm -f E:/Hackathon_0/Vault/Plans/*.md && rm -f E:/Hackathon_0/Vault/Pending_Approval/*.md && echo \"Done\")",
       "Bash(cmd.exe /c \"taskkill /F /IM chrome.exe 2>nul & exit 0\" && sleep 2 && cd E:/Hackathon_0 && uv run python whatsapp_watcher.py --daemon)",
       "Bash(cd E:/Hackathon_0 && uv run python whatsapp_watcher.py --daemon)",
-      "Bash(uv run:*)"
+      "Bash(uv run:*)",
+      "Write(Vault/**)",
+      "mcp__filesystem__write_file(*)",
+      "mcp__filesystem__move_file(*)",
+      "Bash(rm Vault/Inbox/*:*)",
+      "Bash(del Vault\\Inbox\\*:*)"
     ]
   }
 }

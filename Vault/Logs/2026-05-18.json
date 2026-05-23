@@ -1,0 +1,110 @@
+[
+  {
+    "timestamp": "2026-05-18T14:27:35.916704",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260516_151429_openclaw_ai.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to publish LinkedIn post: 401 Client Error: Unauthorized for url: https://api.linkedin.com/v2/userinfo\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-05-18T14:30:23.497541",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260518_143022.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260518_143022.md"
+  },
+  {
+    "timestamp": "2026-05-18T14:30:28.353172",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260518_143022.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-18T14:31:42.115364",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260518_143022.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-18T14:31:43.140326",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260518_143022.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\nNo outgoing email found in plan.\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-18T14:40:31.302223",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260518_143022.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\nNo outgoing email found in plan.\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-18T14:40:51.975770",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260518_143022.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\nNo outgoing email found in plan.\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-18T14:58:31.753615",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260518_145829.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-18T15:02:13.255901",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260516_151625_Claude_Code_and_MCP_Integration.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-18T15:02:15.748555",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260516_151625_Claude_Code_and_MCP_Integration.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to publish LinkedIn post: 401 Client Error: Unauthorized for url: https://api.linkedin.com/v2/userinfo\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-05-18T15:02:17.233577",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260516_151625_Claude_Code_and_MCP_Integration.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to publish LinkedIn post: 401 Client Error: Unauthorized for url: https://api.linkedin.com/v2/userinfo\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-05-18T15:46:21.361549",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260516_151625_Claude_Code_and_MCP_Integration.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| LinkedIn post published | Done |\n| Post preview | # Claude Code and MCP Integration\n\nAre you ready to revolutionize your workflow with the latest advancements in coding t... |\n\n**Status: COMPLETE**"
+  }
+]

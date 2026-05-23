@@ -1,0 +1,254 @@
+[
+  {
+    "timestamp": "2026-05-23T12:07:53.601688",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260523_120604_Zeeshan_Bro_e7b4d3.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260523_120604_Zeeshan_Bro_e7b4d3.md"
+  },
+  {
+    "timestamp": "2026-05-23T12:08:36.897346",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260523_120604_Zeeshan_Bro_e7b4d3.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T12:09:18.389316",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260523_120604_Zeeshan_Bro_e7b4d3.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Bro' | Sent |\n| Message | Nice meeting you too, Zeeshan. Let's catch up soon. |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-23T12:22:30.328654",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260523_121722_Zeeshan_Jutt_45977f.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260523_121722_Zeeshan_Jutt_45977f.md"
+  },
+  {
+    "timestamp": "2026-05-23T12:23:30.712483",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260523_122328_Zeeshan_Jutt_121bbb.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260523_122328_Zeeshan_Jutt_121bbb.md"
+  },
+  {
+    "timestamp": "2026-05-23T12:24:04.959861",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260523_121722_Zeeshan_Jutt_45977f.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T12:24:48.649994",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260523_121722_Zeeshan_Jutt_45977f.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Jutt' | Sent |\n| Message | We have received your message and are looking into the payment issue. We will process the payment im |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-23T12:28:28.324299",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260523_122826_Zeeshan_Jutt_132ebb.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260523_122826_Zeeshan_Jutt_132ebb.md"
+  },
+  {
+    "timestamp": "2026-05-23T12:28:54.979784",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260523_122826_Zeeshan_Jutt_132ebb.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T12:29:13.531527",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260523_122826_Zeeshan_Jutt_132ebb.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Jutt' | Sent |\n| Message | Hi Zeeshan, we have received your order with invoice id 123578955. We are processing it now. Thank y |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-23T12:29:23.008426",
+    "action_type": "plan_deferred_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260523_122328_Zeeshan_Jutt_121bbb.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T12:34:07.700500",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260523_123405_Tell_me_the_expense_of_your_4_year_hostel_fee_or_or_clothes_.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260523_123405_Tell_me_the_expense_of_your_4_year_hostel_fee_or_or_clothes_.md"
+  },
+  {
+    "timestamp": "2026-05-23T12:36:28.874762",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_email_20260523_123405_Tell_me_the_expense_of_your_4_year_hostel_fee_or_or_clothes_.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T12:36:31.124070",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260523_123405_Tell_me_the_expense_of_your_4_year_hostel_fee_or_or_clothes_.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to faizanalifsd04@gmail.com | Sent (ID: `19e53c3a25f7770a`) |\n| Subject | Re: Tell me the expense of your 4 year hostel fee or or clothes you wear in 4 year. |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-23T12:40:10.092053",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "email_20260523_124007_Favorite_food.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_email_20260523_124007_Favorite_food.md"
+  },
+  {
+    "timestamp": "2026-05-23T12:41:28.323794",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_email_20260523_124007_Favorite_food.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T12:41:31.509791",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260523_124007_Favorite_food.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to faizanalifsd04@gmail.com | Sent (ID: `19e53c839c5be157`) |\n| Subject | Re: Favorite food |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-23T16:00:16.319901",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260523_160014_Hackathon_Experience.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260523_160014_Hackathon_Experience.md"
+  },
+  {
+    "timestamp": "2026-05-23T16:01:32.193361",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260523_160014_Hackathon_Experience.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T16:01:36.113436",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260523_160014_Hackathon_Experience.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| LinkedIn post published | Done |\n| Post preview | # Hackathon Experience\n\nI still remember the rush of adrenaline I felt when our team was announced as the winner of a 24... |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-23T16:04:54.355826",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260523_160452.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260523_160452.md"
+  },
+  {
+    "timestamp": "2026-05-23T16:04:58.049434",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260523_160452.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T16:05:48.846617",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260523_160452.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T16:05:56.148771",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260523_160452.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "1120254604511205_122103960081319078"
+  },
+  {
+    "timestamp": "2026-05-23T16:05:56.206269",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260523_160452.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T16:07:45.656865",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260523_160744.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260523_160744.md"
+  },
+  {
+    "timestamp": "2026-05-23T16:07:49.291947",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260523_160744.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-23T16:16:28.127230",
+    "action_type": "plan_deferred_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260523_160744.md",
+    "approval_status": "pending",
+    "result": "success",
+    "details": ""
+  }
+]

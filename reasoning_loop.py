@@ -44,7 +44,7 @@ from vault_io import VaultIO
 
 BASE_DIR = Path(__file__).parent
 LOG_FILE = BASE_DIR / "reasoning_loop.log"
-POLL_INTERVAL_SECONDS = 600  # 10 minutes in daemon mode
+POLL_INTERVAL_SECONDS = 30   # 30 seconds in daemon mode
 RETRY_FILE = BASE_DIR / "reasoning_retries.json"
 MAX_RETRIES = 3  # escalate to CEO briefing after this many re-queues
 
@@ -299,6 +299,10 @@ def process_needs_action(vault: VaultIO) -> int:
     processed = 0
     for rel_path in items:
         task_name = Path(rel_path).name
+
+        if task_name.startswith("fb_request_") or task_name.startswith("FAILED_facebook_"):
+            log.info("Skipping social media request file: %s", task_name)
+            continue
 
         if _plan_exists(vault, task_name):
             log.info("Plan already exists for %s — skipping.", task_name)

@@ -1,0 +1,218 @@
+[
+  {
+    "timestamp": "2026-03-25T10:16:51.010588",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260325_101457_Zeeshan_Bro_92445e.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260325_101457_Zeeshan_Bro_92445e.md"
+  },
+  {
+    "timestamp": "2026-03-25T10:17:39.333393",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260325_101457_Zeeshan_Bro_92445e.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-25T10:17:58.220604",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260325_101457_Zeeshan_Bro_92445e.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Bro'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T10:25:32.586573",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260325_101457_Zeeshan_Bro_92445e.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-25T10:26:01.261916",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260325_101457_Zeeshan_Bro_92445e.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Bro'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T10:30:03.818486",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_email_20260316_114458_Alibaba_Cloud.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-25T10:30:06.156516",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_email_20260316_114458_Alibaba_Cloud.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| Send reply to ericka@alibaba-inc.com | Sent (ID: `19d2378b3dc0300b`) |\n| Subject | Re: Alibaba Cloud |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-25T10:30:37.529346",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "whatsapp_20260325_102836_Zeeshan_Bro_9bfda1.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_whatsapp_20260325_102836_Zeeshan_Bro_9bfda1.md"
+  },
+  {
+    "timestamp": "2026-03-25T10:32:17.543073",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260325_102836_Zeeshan_Bro_9bfda1.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-25T10:32:36.975382",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260325_102836_Zeeshan_Bro_9bfda1.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Bro'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T10:40:09.541088",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260325_101457_Zeeshan_Bro_92445e.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Bro'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T10:45:04.635802",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_whatsapp_20260315_122229_Zeeshan_Jutt_55956b.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-25T10:45:10.071805",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260315_122229_Zeeshan_Jutt_55956b.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Jutt'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T10:48:40.472862",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260325_101457_Zeeshan_Bro_92445e.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Bro'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T10:54:42.436749",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260315_122229_Zeeshan_Jutt_55956b.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Jutt'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T10:55:30.477245",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260325_101457_Zeeshan_Bro_92445e.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Bro'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T10:58:14.999767",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260315_122229_Zeeshan_Jutt_55956b.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Jutt'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T10:59:13.864434",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260325_101457_Zeeshan_Bro_92445e.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Bro' | Sent |\n| Message | Not, I'm not ready for the meeting at 2pm. See you later! |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-25T11:00:30.883052",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260315_122229_Zeeshan_Jutt_55956b.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Jutt'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T11:02:39.095134",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260315_122229_Zeeshan_Jutt_55956b.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "## Execution Report\n\nFailed to send WhatsApp reply to 'Zeeshan Jutt'.\n\n**Status: BLOCKED**"
+  },
+  {
+    "timestamp": "2026-03-25T11:04:32.746003",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_whatsapp_20260315_122229_Zeeshan_Jutt_55956b.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| WhatsApp reply to 'Zeeshan Jutt' | Sent |\n| Message | Meeting confirmed, thank you. We will send over the meeting details shortly. |\n| Move plan \u2192 `Vault/Done/` | Done |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-03-25T11:26:34.369238",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260325_112523_python_Games.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260325_112523_python_Games.md"
+  },
+  {
+    "timestamp": "2026-03-25T11:27:10.493988",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260325_112523_python_Games.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-03-25T11:27:14.203162",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260325_112523_python_Games.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| LinkedIn post published | Done |\n| Post preview | # python Games\n\nAre you ready to unleash your inner gamer and coder at the same time, because I'm about to share somethi... |\n\n**Status: COMPLETE**"
+  }
+]
