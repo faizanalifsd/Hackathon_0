@@ -1,0 +1,137 @@
+[
+  {
+    "timestamp": "2026-05-29T10:19:32.235002",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "linkedin_20260529_101930_Eid_Memories.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_linkedin_20260529_101930_Eid_Memories.md"
+  },
+  {
+    "timestamp": "2026-05-29T10:20:49.188192",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_linkedin_20260529_101930_Eid_Memories.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-29T10:20:53.548547",
+    "action_type": "plan_executed",
+    "actor": "approval_watcher",
+    "target": "PLAN_linkedin_20260529_101930_Eid_Memories.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": "## Execution Report\n\n| Step | Result |\n|------|--------|\n| LinkedIn post published | Done |\n| Post preview | # Eid Memories\n\nAs I sit here surrounded by the remnants of last night's Eid celebrations, I'm taken back to a time when... |\n\n**Status: COMPLETE**"
+  },
+  {
+    "timestamp": "2026-05-29T10:23:55.533114",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260529_102353.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260529_102353.md"
+  },
+  {
+    "timestamp": "2026-05-29T10:23:59.001404",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260529_102353.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-29T10:25:17.993894",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260529_102353.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-29T10:25:19.792955",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260529_102353.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "400 Client Error: Bad Request for url: https://graph.facebook.com/v19.0/1120254604511205/feed"
+  },
+  {
+    "timestamp": "2026-05-29T10:25:19.814952",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260529_102353.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-29T10:25:20.997954",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "FAILED_facebook_PLAN_FACEBOOK_POST_20260529_102353.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_FAILED_facebook_PLAN_FACEBOOK_POST_20260529_102353.md"
+  },
+  {
+    "timestamp": "2026-05-29T10:28:25.934438",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "fb_request_20260529_102824.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_fb_request_20260529_102824.md"
+  },
+  {
+    "timestamp": "2026-05-29T10:28:29.890686",
+    "action_type": "facebook_post_drafted",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260529_102824.md",
+    "approval_status": "awaiting_review",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-29T10:30:01.855826",
+    "action_type": "plan_approved_by_user",
+    "actor": "user",
+    "target": "PLAN_FACEBOOK_POST_20260529_102824.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-29T10:30:03.325346",
+    "action_type": "facebook_post_published",
+    "actor": "facebook_mcp_server",
+    "target": "PLAN_FACEBOOK_POST_20260529_102824.md",
+    "approval_status": "approved",
+    "result": "failed",
+    "details": "400 Client Error: Bad Request for url: https://graph.facebook.com/v19.0/1120254604511205/feed"
+  },
+  {
+    "timestamp": "2026-05-29T10:30:03.350292",
+    "action_type": "social_post_published",
+    "actor": "approval_watcher",
+    "target": "PLAN_FACEBOOK_POST_20260529_102824.md",
+    "approval_status": "approved",
+    "result": "success",
+    "details": ""
+  },
+  {
+    "timestamp": "2026-05-29T10:30:04.840914",
+    "action_type": "plan_generated",
+    "actor": "main",
+    "target": "FAILED_facebook_PLAN_FACEBOOK_POST_20260529_102824.md",
+    "approval_status": "auto",
+    "result": "success",
+    "details": "Plan written to PLAN_FAILED_facebook_PLAN_FACEBOOK_POST_20260529_102824.md"
+  }
+]

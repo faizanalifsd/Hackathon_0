@@ -80,7 +80,13 @@ def publish_to_page(message: str) -> dict:
         data={"message": message, "access_token": page_token},
         timeout=10,
     )
-    r.raise_for_status()
+    if not r.ok:
+        try:
+            fb_error = r.json().get("error", {})
+            detail = f"{fb_error.get('message', r.text)} (code {fb_error.get('code')}, subcode {fb_error.get('error_subcode')})"
+        except Exception:
+            detail = r.text
+        raise Exception(f"Facebook API {r.status_code}: {detail}")
     return {"status": "published", "post_id": r.json().get("id")}
 
 
@@ -348,10 +354,12 @@ def cmd_post():
                 result="failed",
                 details=str(exc),
             )
-            fail_file = vault.needs_action / f"FAILED_facebook_{post_file.name}"
+            vault.done.mkdir(parents=True, exist_ok=True)
+            fail_file = vault.done / f"FAILED_facebook_{post_file.name}"
             fail_file.write_text(
-                f"---\ntype: error\nplatform: facebook\n---\n\n"
-                f"# Facebook Post Failed\n\n**File:** {post_file.name}\n**Error:** {exc}\n",
+                f"---\ntype: error\nplatform: facebook\nresult: failed\n---\n\n"
+                f"# Facebook Post Failed\n\n**File:** {post_file.name}\n**Error:** {exc}\n\n"
+                f"**Fix:** Check FACEBOOK_PAGE_ACCESS_TOKEN in .env — it may be expired or missing `pages_manage_posts` permission.\n",
                 encoding="utf-8",
             )
 
